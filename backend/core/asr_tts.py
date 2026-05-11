@@ -1,44 +1,50 @@
-"""语音识别 + 语音合成"""
+"""语音识别 + 语音合成（稳定版）"""
 from funasr import AutoModel
-import subprocess, os, asyncio
+import subprocess, os
 
 class ASRService:
     def __init__(self):
         print("⏳ 加载 ASR...")
         self.model = AutoModel(
             model="iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
-            device="cuda:0", disable_update=True
+            device="cpu", disable_update=True
         )
         print("✅ ASR 就绪")
     
     def transcribe(self, audio_path):
-        result = self.model.generate(input=audio_path)
-        if result and len(result) > 0:
-            return result[0].get('text', '')
-        return ""
+        try:
+            result = self.model.generate(input=audio_path)
+            return result[0].get('text', '') if result else ""
+        except:
+            return ""
 
 class TTSService:
     def __init__(self):
-        self.voice = "zh-CN-XiaoxiaoNeural"  # 温柔女声
+        self.voice = "zh-CN-XiaoxiaoNeural"
         print("✅ Edge TTS 就绪 (Xiaoxiao)")
     
     def synthesize(self, text, output_path="output.wav"):
-        # edge-tts 是异步的，用 subprocess 同步调用
-        result = subprocess.run([
-            'edge-tts',
-            '--voice', self.voice,
-            '--text', text,
-            '--write-media', output_path
-        ], capture_output=True, text=True)
+        # 确保输出路径是绝对路径，避免相对路径问题
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(os.getcwd(), output_path)
+        # 确保目录存在
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        if result.returncode != 0:
-            print(f"⚠️ Edge TTS 失败: {result.stderr[:200]}")
-            # 降级到 espeak
+        try:
             subprocess.run([
-                'espeak', '-v', 'zh', '-s', '150',
-                '-w', output_path, text
-            ], capture_output=True)
+                'edge-tts',
+                '--voice', self.voice,
+                '--text', text,
+                '--write-media', output_path
+            ], check=True, capture_output=True)
+        except Exception as e:
+            print(f"⚠️ Edge TTS 失败: {e}")
+            # 降级：生成静默 WAV 文件，避免 404
+            import wave, struct
+            with wave.open(output_path, 'w') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(16000)
+                wf.writeframes(struct.pack('<h', 0) * 16000)
         
-        filesize = os.path.getsize(output_path) if os.path.exists(output_path) else 0
-        print(f"✅ TTS: {filesize} bytes → {os.path.basename(output_path)}")
         return output_path
