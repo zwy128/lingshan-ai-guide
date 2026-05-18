@@ -262,45 +262,6 @@ async def rebuild_index():
         return {"status": "error", "message": str(e)}
 
 
-
-# ========== 数字人模型管理 ==========
-import shutil
-MODEL_DIR = os.path.join(BASE_DIR, "static", "models")
-os.makedirs(MODEL_DIR, exist_ok=True)
-
-@app.post("/api/admin/models/upload")
-async def upload_model(file: UploadFile = File(...)):
-    if file.content_type not in ("image/png", "image/jpeg", "image/gif"):
-        return {"error": "仅支持 PNG/JPG/GIF 图片"}
-    filename = f"{uuid.uuid4().hex}_{file.filename}"
-    filepath = os.path.join(MODEL_DIR, filename)
-    with open(filepath, "wb") as f:
-        f.write(await file.read())
-    return {"url": f"/static/models/{filename}", "name": file.filename}
-
-@app.get("/api/admin/models")
-async def list_models():
-    models = [{"id": "default", "name": "默认导游小灵", "type": "svg", "url": ""}]
-    if os.path.exists(MODEL_DIR):
-        for fname in sorted(os.listdir(MODEL_DIR)):
-            if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                models.append({
-                    "id": fname,
-                    "name": fname.split("_", 1)[-1],
-                    "type": "image",
-                    "url": f"/static/models/{fname}"
-                })
-    return models
-
-@app.delete("/api/admin/models/{filename}")
-async def delete_model(filename: str):
-    filepath = os.path.join(MODEL_DIR, filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-        return {"status": "ok"}
-    return {"error": "文件不存在"}
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok", "uptime": time.time()}

@@ -47,8 +47,7 @@
     <div class="nav-item" onclick="showPage('history')">交互历史</div>
     <div class="nav-item" onclick="showPage('feedbacks')">用户反馈</div>
     <div class="nav-item" onclick="showPage('knowledge')">知识库管理</div>
-    <div class="nav-item" onclick="showPage('models')">🎭 模型管理</div>
-            <div class="nav-item" onclick="window.open('/')">游客端</div>
+    <div class="nav-item" onclick="window.open('/')">游客端</div>
 </div>
 <div class="main">
     <!-- 数据大屏页 -->
@@ -106,22 +105,8 @@
             <div id="docList"></div>
         </div>
     </div>
-
-        <!-- 模型管理页 -->
-        <div class="page" id="page-models">
-            <div class="page-title">数字人模型管理</div>
-            <div style="margin-bottom:20px; display:flex; align-items:center; gap:10px;">
-                <input type="file" id="modelFile" accept="image/*">
-                <button class="btn" onclick="uploadModel()">上传新形象</button>
-                <span id="modelUploadStatus" style="color:#FFD700; margin-left:10px;"></span>
-            </div>
-            <div class="chart-card">
-                <h3>已上传模型</h3>
-                <div id="modelList" style="max-height:400px; overflow-y:auto;"></div>
-            </div>
-        </div>
-
 </div>
+
 <script>
 // 页面切换
 function showPage(name){
@@ -232,67 +217,6 @@ async function rebuildIndex(){
     btn.disabled = false;
     btn.textContent = '重建索引';
 }
-
-
-// 模型管理功能
-async function loadModels() {
-    try {
-        const res = await fetch('/api/admin/models');
-        const models = await res.json();
-        const listDiv = document.getElementById('modelList');
-        if (!listDiv) return;
-        listDiv.innerHTML = '';
-        models.forEach((model) => {
-            const item = document.createElement('div');
-            item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #1f2937;';
-            if (model.type === 'svg') {
-                item.innerHTML = '<span>🧑 <strong>默认导游小灵</strong> (内置)</span>';
-            } else {
-                item.innerHTML = `
-                    <span style="display:flex; align-items:center; gap:10px;">
-                        <img src="${model.url}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23333%22/%3E%3Ctext x=%225%22 y=%2225%22 fill=%22white%22%3E?%3C/text%3E%3C/svg%3E'">
-                        ${model.name}
-                    </span>
-                    <button class="btn" onclick="deleteModel('${model.id}')" style="background:#f44336; border-color:#f44336;">删除</button>
-                `;
-            }
-            listDiv.appendChild(item);
-        });
-    } catch (e) {
-        console.error('加载模型列表失败', e);
-    }
-}
-
-async function uploadModel() {
-    const file = document.getElementById('modelFile').files[0];
-    if (!file) return alert('请选择图片文件');
-    const form = new FormData();
-    form.append('file', file);
-    const status = document.getElementById('modelUploadStatus');
-    status.textContent = '上传中...';
-    const res = await fetch('/api/admin/models/upload', { method: 'POST', body: form });
-    const data = await res.json();
-    if (data.url) {
-        status.textContent = '上传成功';
-        loadModels();
-    } else {
-        status.textContent = '上传失败: ' + data.error;
-    }
-    setTimeout(() => { status.textContent = ''; }, 3000);
-}
-
-async function deleteModel(filename) {
-    if (!confirm('确定要删除这个形象吗？')) return;
-    await fetch(`/api/admin/models/${filename}`, { method: 'DELETE' });
-    loadModels();
-}
-
-// 当切换到模型管理页时自动加载列表
-const originalShowPage = showPage;
-showPage = function(name) {
-    originalShowPage(name);
-    if (name === 'models') loadModels();
-};
 
 </script>
 </body>
