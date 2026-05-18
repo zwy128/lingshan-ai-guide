@@ -81,15 +81,6 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 <div class="chat-header">🏯 灵 山 胜 境<div class="sub">—— 千年佛国 · 智慧之旅 ——</div><button class="btn-clear" onclick="clearChat()">新对话</button></div>
 <div class="messages" id="messages"><div class="msg bot">✨ 嗨！我是小灵，你的专属AI导游～<br>灵山胜境的故事，让我讲给你听！</div></div>
 <div class="voice-text" id="voiceText"></div>
-
-<!-- 满意度评价栏 -->
-<div id="feedbackBar" style="display:none; padding:8px 15px; background:#f0f4ff; border-top:1px solid #d0d5fa; text-align:center; font-size:14px;">
-    <span style="color:#333; margin-right:10px;">本次导游服务怎么样？</span>
-    <button onclick="sendFeedback('good')" style="background:#4caf50; color:white; border:none; padding:5px 15px; border-radius:15px; cursor:pointer; margin:0 5px;">满意</button>
-    <button onclick="sendFeedback('neutral')" style="background:#ff9800; color:white; border:none; padding:5px 15px; border-radius:15px; cursor:pointer; margin:0 5px;">一般</button>
-    <button onclick="sendFeedback('bad')" style="background:#f44336; color:white; border:none; padding:5px 15px; border-radius:15px; cursor:pointer; margin:0 5px;">不满意</button>
-</div>
-
 <div class="input-area">
 <input type="text" id="userInput" placeholder="问我任何问题，或按住🎤说话～" onkeypress="if(event.key=='Enter')sendText()">
 <button class="btn-voice" id="voiceBtn">🎤</button>
@@ -177,37 +168,5 @@ document.getElementById('voiceBtn').addEventListener('mouseleave',function(){if(
 document.getElementById('voiceBtn').addEventListener('touchstart',function(e){e.preventDefault();startRec()});
 document.getElementById('voiceBtn').addEventListener('touchend',stopRec);
 setTimeout(wave,500);
-
-// 满意度反馈
-function showFeedbackBar() {
-    document.getElementById('feedbackBar').style.display = 'block';
-}
-function hideFeedbackBar() {
-    document.getElementById('feedbackBar').style.display = 'none';
-}
-async function sendFeedback(rating) {
-    try {
-        await fetch('/api/feedback', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({rating: rating})
-        });
-        hideFeedbackBar();
-        const vt = document.getElementById('voiceText');
-        vt.textContent = '感谢您的反馈！';
-        setTimeout(() => { vt.textContent = ''; }, 2000);
-    } catch(e) {
-        console.error(e);
-    }
-}
-// 每次机器人回答后显示评价栏
-const origAddMsg = addMsg;
-addMsg = function(text, isUser) {
-    origAddMsg(text, isUser);
-    if (!isUser) {
-        showFeedbackBar();
-    }
-};
-
 </script>
 </body></html>

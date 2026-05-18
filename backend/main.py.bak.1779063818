@@ -50,9 +50,6 @@ def get_preset_reply(text):
             return reply
     return None
 
-class FeedbackRequest(BaseModel):
-    rating: str
-
 class ChatRequest(BaseModel):
     text: str
 
@@ -145,20 +142,6 @@ async def recent(limit: int = 20):
 async def admin():
     with open(os.path.join(BASE_DIR, 'static', 'admin.html'), 'r', encoding='utf-8') as f:
         return f.read()
-
-
-from pydantic import BaseModel
-
-class FeedbackRequest(BaseModel):
-    rating: str  # good, neutral, bad
-
-@app.post("/api/feedback")
-async def feedback(req: FeedbackRequest):
-    if req.rating not in ("good", "neutral", "bad"):
-        return {"status": "error", "message": "无效的评分"}
-    logger.add_feedback(req.rating)
-    return {"status": "ok"}
-
 
 @app.get("/health")
 async def health():
