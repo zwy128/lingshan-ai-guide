@@ -54,20 +54,11 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism2.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/index.min.js"></script>
 
 </head>
 <body>
-<script>
-function showMainApp(){var s=document.getElementById('startScreen');var m=document.getElementById('mainApp');if(s)s.style.display='none';if(m){m.style.display='flex';m.style.visibility='visible';}}
-function useDefault(){showMainApp();}
-function quickStart(){showMainApp();}
-function startWithLive2D(){if(typeof initLive2D==='function')initLive2D();showMainApp();}
-function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=new FormData();form.append('file',file);fetch('/api/admin/upload-avatar',{method:'POST',body:form}).then(function(r){return r.json()}).then(function(data){if(data.url)showMainApp();else alert('上传失败');}).catch(function(){alert('网络错误');});}
-</script>
-
 
 
         
@@ -98,22 +89,15 @@ function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
             <label for="avatarFile" style="display:block;cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;"></label>
             <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"/><circle cx="12" cy="11" r="3"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">📷</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">导入本地形象</div>
             <div style="font-size:0.85em;opacity:0.7;">从电脑选择图片</div>
         </div>
-            <!-- 数字人导游卡片 -->
-    <div onclick="startWithLive2D()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-      <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><rect x="4" y="4" width="16" height="16" rx="4" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="10" r="3" fill="white"/><path d="M8 16c0-1.66 1.79-3 4-3s4 1.34 4 3" fill="white"/></svg>
-      <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">数字人导游</div>
-      <div style="font-size:0.85em;opacity:0.7;">Live2D 口型同步</div>
-    </div>
-
-    <!-- 快速进入卡片 -->
+        <!-- 快速进入卡片 -->
         <div onclick="quickStart()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;"
              onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">⚡</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">快速进入</div>
             <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
         </div>
@@ -326,40 +310,38 @@ async function loadAvatars(){
     });
   }catch(e){list.innerHTML='<div>加载失败</div>'}
 }
+
 function switchAvatar(avatar){
-  const container=document.getElementById('avatarContainer');
-  if(avatar.type==='svg'||avatar.id==='default'){
-    container.innerHTML=`<svg id="avatarSvg" width="220" height="310" viewBox="0 0 220 320">
-      <defs><radialGradient id="gg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.2"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></radialGradient></defs>
-      <circle cx="110" cy="120" r="100" fill="url(#gg)"/>
-      <g id="bodyGroup"><rect x="65" y="195" width="90" height="80" rx="20" fill="#667eea"/><ellipse cx="110" cy="270" rx="55" ry="45" fill="#667eea"/><path d="M110 190 L100 210 L110 235 L120 210 Z" fill="#FFD700"/><rect x="80" y="222" width="60" height="16" rx="4" fill="#FFD700"/><text x="110" y="234" text-anchor="middle" font-size="8" fill="#4a3728" font-weight="bold">导游·小灵</text></g>
-      <g id="leftHand"><circle cx="52" cy="230" r="18" fill="#FFE4C4"/></g>
-      <g id="rightHand"><circle cx="168" cy="230" r="18" fill="#FFE4C4"/></g>
-      <g id="headGroup">
-        <circle cx="110" cy="110" r="72" fill="#FFE4C4"/><ellipse cx="110" cy="55" rx="82" ry="48" fill="#4a3728"/>
-        <path d="M38 60 Q52 98 72 78 Q88 108 100 72 Q115 102 130 78 Q148 98 182 60 Q170 28 110 22 Q50 28 38 60Z" fill="#4a3728"/>
-        <path id="ahoge" d="M110 22 Q115 -8 132 -12" stroke="#4a3728" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <ellipse id="lBrow" cx="82" cy="88" rx="13" ry="4" fill="#5a4030"/><ellipse id="rBrow" cx="138" cy="88" rx="13" ry="4" fill="#5a4030"/>
-        <ellipse cx="83" cy="104" rx="15" ry="18" fill="white"/><circle id="lPupil" cx="86" cy="105" r="9" fill="#1a1a2e"/><circle cx="90" cy="99" r="4.5" fill="white"/><circle cx="82" cy="109" r="2" fill="white"/>
-        <ellipse cx="137" cy="104" rx="15" ry="18" fill="white"/><circle id="rPupil" cx="140" cy="105" r="9" fill="#1a1a2e"/><circle cx="144" cy="99" r="4.5" fill="white"/><circle cx="136" cy="109" r="2" fill="white"/>
-        <ellipse cx="110" cy="125" rx="6" ry="5" fill="#F0C8A0"/>
-        <path id="svgMouth" d="M100 142 Q110 150 120 142" stroke="#d4786a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
-        <ellipse id="lBlush" cx="65" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/><ellipse id="rBlush" cx="155" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/>
-        <path d="M58 88 Q40 93 42 118 Q44 142 58 148" stroke="#333" stroke-width="3" fill="none"/><rect x="37" y="98" width="7" height="18" rx="3" fill="#333"/><circle cx="40" cy="90" r="3" fill="#00ff88"/>
-      </g>
-    </svg>`;
-    currentAvatarType='svg';
-    setTimeout(()=>{
-      headGroup=document.getElementById('headGroup');lPupil=document.getElementById('lPupil');rPupil=document.getElementById('rPupil');
-      lBlush=document.getElementById('lBlush');rBlush=document.getElementById('rBlush');svgMouth=document.getElementById('svgMouth');
-      rightHand=document.getElementById('rightHand');ahoge=document.getElementById('ahoge');
-    },100);
-  } else {
-    container.innerHTML=`<img src="${avatar.url}" alt="${avatar.name}" style="max-width:200px;max-height:300px;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,.3);"/>`;
-    currentAvatarType='image';
-    headGroup=null;svgMouth=null;
-  }
-  document.getElementById('avatarList').style.display='none';
+    const container = document.getElementById('avatarContainer');
+    const canvas = document.getElementById('live2dCanvas');
+    const svg = document.getElementById('avatarSvg');
+    // 清除旧视频或图片
+    const oldVideo = document.getElementById('talkingVideo');
+    if(oldVideo) oldVideo.remove();
+    const oldImg = container.querySelector('img');
+    if(oldImg) oldImg.remove();
+
+    if(avatar.type === 'svg' || avatar.id === 'default'){
+        if(canvas) canvas.style.display = 'none';
+        if(svg) svg.style.display = 'block';
+        currentAvatarType = 'svg';
+        // 重新绑定 SVG 动画元素
+        headGroup=document.getElementById('headGroup');lPupil=document.getElementById('lPupil');rPupil=document.getElementById('rPupil');
+        lBlush=document.getElementById('lBlush');rBlush=document.getElementById('rBlush');svgMouth=document.getElementById('svgMouth');
+        rightHand=document.getElementById('rightHand');ahoge=document.getElementById('ahoge');
+    } else if(avatar.type === 'live2d'){
+        if(svg) svg.style.display = 'none';
+        if(canvas) { canvas.style.display = 'block'; loadLive2D(avatar.url); }
+        currentAvatarType = 'live2d';
+    } else {
+        if(canvas) canvas.style.display = 'none';
+        if(svg) svg.style.display = 'none';
+        container.innerHTML += `<img src="${avatar.url}" alt="${avatar.name}" style="max-width:200px;max-height:300px;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,.3);"/>`;
+        currentAvatarType = 'image';
+    }
+    document.getElementById('avatarList').style.display = 'none';
+}
+
 }
 document.getElementById('changeAvatarBtn').addEventListener('click',()=>{
   const list=document.getElementById('avatarList');
@@ -379,7 +361,7 @@ function showMainApp(){
   if(startScreen) startScreen.style.display = 'none';
   if(mainApp) { mainApp.style.display = 'flex'; mainApp.style.visibility = 'visible'; }
 }
-function useDefault(){}
+
 function quickStart(){
   showMainApp();
 }
@@ -439,10 +421,7 @@ async function loadModels() {
 }
 
 // 选择模型
-function selectModel(model) {
-    if (model.type === 'svg' || model.id === 'default') {
-        useDefault();
-    } else {
+ else {
         // 切换为图片模型
         switchAvatar({type:'image', url:model.url, name:model.name});
         showMainApp();
@@ -467,92 +446,145 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startScreen) startScreen.style.display = 'flex';
 });
 </script>
-
 <script>
-// ===== Audio 全局单例 + 音量分析 =====
-(function(){
-  var _ga=new Audio();_ga.crossOrigin='anonymous';
-  window._globalAudio=_ga;
-  var _origAudio=window.Audio;
-  window.Audio=function(src){
-    if(src)_ga.src=src;
-    _ga.onplay=null;_ga.onended=null;_ga.onerror=null;
-    return _ga;
-  };
-  var ctx,anl,inited=false;
-  window.currentVolume=0;window.smoothedVolume=0;
-  function initCtx(){
-    if(inited)return;
-    try{
-      ctx=new(window.AudioContext||window.webkitAudioContext)();
-      anl=ctx.createAnalyser();anl.fftSize=256;
-      var source=ctx.createMediaElementSource(_ga);
-      source.connect(anl);anl.connect(ctx.destination);
-      inited=true;
-    }catch(e){console.warn('音频分析初始化失败',e);}
-  }
-  function updVol(){
-    if(_ga.paused){window.currentVolume=0;requestAnimationFrame(updVol);return;}
-    if(!anl){requestAnimationFrame(updVol);return;}
-    var d=new Uint8Array(anl.frequencyBinCount);anl.getByteTimeDomainData(d);
-    var s=0;for(var i=0;i<d.length;i++){var v=(d[i]-128)/128;s+=v*v;}
-    window.currentVolume=Math.sqrt(s/d.length);
-    requestAnimationFrame(updVol);
-  }
-  _ga.addEventListener('play',function(){
-    initCtx();
-    if(ctx&&ctx.state==='suspended')ctx.resume();
-    updVol();
-  });
-  _ga.addEventListener('pause',function(){window.currentVolume=0;});
-})();
+let live2dModel = null;
+let live2dApp = null;
 
-// ===== Live2D Shizuku + 恒速收嘴口型 =====
-window.isLive2DActive=false;
-async function initLive2D(){
-  window.isLive2DActive=true;
-  var container=document.getElementById('avatarContainer');
-  if(!container)return;
-  container.innerHTML='';
-  var nd=container.parentElement.querySelector('.name-display');
-  if(nd)nd.style.display='none';
-  try{
-    if(typeof PIXI==='undefined'||!PIXI.live2d||!PIXI.live2d.Live2DModel){
-      throw new Error('Live2D 库未加载，请检查网络');
+async function loadLive2D(modelUrl) {
+    const canvas = document.getElementById('live2dCanvas');
+    if (!canvas) return;
+    document.getElementById('avatarSvg').style.display = 'none';
+    canvas.style.display = 'block';
+    try {
+        if (live2dApp) {
+            live2dApp.destroy(true);
+            live2dApp = null;
+            live2dModel = null;
+        }
+        const app = new PIXI.Application({
+            view: canvas,
+            width: 300,
+            height: 400,
+            backgroundAlpha: 0,
+        });
+        const model = await PIXI.live2d.Live2DModel.from(modelUrl);
+        app.stage.addChild(model);
+        model.x = 150;
+        model.y = 220;
+        model.scale.set(0.3);
+        live2dModel = model;
+        live2dApp = app;
+    } catch (e) {
+        console.error('Live2D 加载失败', e);
+        canvas.style.display = 'none';
+        document.getElementById('avatarSvg').style.display = 'block';
+        // 回退到默认 SVG
+        switchAvatar({type:'svg', id:'default'});
     }
-    var app=new PIXI.Application({
-      width:container.clientWidth||380,
-      height:container.clientHeight||500,
-      transparent:true,autoDensity:true,
-      resolution:window.devicePixelRatio||2
-    });
-    container.appendChild(app.view);
-
-    var model=await PIXI.live2d.Live2DModel.from('/static/models/shizuku/shizuku.model.json');
-    app.stage.addChild(model);
-    model.anchor.set(0.5,0.5);
-    model.x=app.screen.width/2;
-    model.y=app.screen.height/2;
-    var sc=Math.min(app.screen.width/model.width,app.screen.height/model.height);
-    model.scale.set(sc*0.9);
-
-    // Cubism 2 口型驱动
-    var coreModel=model.internalModel.coreModel;
-    var origUpdate=coreModel.update.bind(coreModel);
-    coreModel.update=function(){
-      var tv=window.currentVolume<0.02?0:window.currentVolume;
-      tv=Math.min(1,Math.pow(tv*12,1.2));
-      if(tv>window.smoothedVolume)window.smoothedVolume+=(tv-window.smoothedVolume)*0.5;
-      else window.smoothedVolume=Math.max(tv,window.smoothedVolume-0.1);
-      this.setParamFloat("PARAM_MOUTH_OPEN_Y",window.smoothedVolume);
-      origUpdate();
-    };
-    console.log('Live2D Shizuku + 口型同步 加载成功');
-  }catch(e){
-    console.error('Live2D 加载失败:',e);
-    container.innerHTML='<div style="color:white;padding:20px;text-align:center;">模型加载失败<br>'+e.message+'</div>';
-  }
 }
-</script>
 
+// 覆盖 startSpeak/stopSpeak 驱动嘴型
+const origStartSpeak = startSpeak;
+startSpeak = function() {
+    if (live2dModel && live2dModel.internalModel) {
+        mouthTimer = setInterval(() => {
+            const value = Math.random();
+            live2dModel.internalModel.motionManager.updateFaceParameter('ParamMouthOpenY', value);
+        }, 100);
+    } else if (svgMouth) {
+        origStartSpeak();
+    }
+};
+const origStopSpeak = stopSpeak;
+stopSpeak = function() {
+    clearInterval(mouthTimer);
+    if (live2dModel && live2dModel.internalModel) {
+        live2dModel.internalModel.motionManager.updateFaceParameter('ParamMouthOpenY', 0);
+    }
+    origStopSpeak();
+};
+</script>
+<script>
+// 加载可用模型列表
+async function loadModels() {
+    const container = document.getElementById('modelCards');
+    if (!container) return;
+    // 先显示默认卡片，避免白屏
+    container.innerHTML = `
+        <div onclick="useDefault()" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:20px;width:160px;cursor:pointer;border:2px solid transparent;text-align:center;">
+            <div style="font-size:60px;line-height:1;">🧑</div>
+            <div style="font-size:14px;font-weight:bold;">默认导游小灵</div>
+        </div>
+        <div onclick="selectLive2D()" style="background:rgba(255,255,255,0.1);border-radius:20px;padding:20px;width:160px;cursor:pointer;border:2px solid transparent;text-align:center;">
+            <div style="font-size:60px;line-height:1;">🎀</div>
+            <div style="font-size:14px;font-weight:bold;">小春 (Live2D)</div>
+        </div>
+    `;
+    // 尝试从后端获取更多模型（如果后端挂了也不影响）
+    try {
+        const res = await fetch('/api/admin/models');
+        const models = await res.json();
+        container.innerHTML = '';
+        models.forEach(model => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:rgba(255,255,255,0.1);border-radius:20px;padding:20px;width:160px;cursor:pointer;transition:0.3s;border:2px solid transparent;text-align:center;';
+            card.onmouseover = () => { card.style.background='rgba(255,255,255,0.2)'; card.style.borderColor='#FFD700'; card.style.transform='translateY(-5px)'; };
+            card.onmouseout = () => { card.style.background='rgba(255,255,255,0.1)'; card.style.borderColor='transparent'; card.style.transform='translateY(0)'; };
+            card.onclick = () => selectModel(model);
+            if (model.type === 'svg') {
+                card.innerHTML = `<div style="font-size:60px;line-height:1;">🧑</div><div style="font-size:14px;font-weight:bold;">${model.name}</div>`;
+            } else if (model.type === 'live2d') {
+                card.innerHTML = `<div style="font-size:60px;line-height:1;">🎀</div><div style="font-size:14px;font-weight:bold;">${model.name}</div>`;
+            } else {
+                card.innerHTML = `<img src="${model.url}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:10px;" onerror="this.parentElement.querySelector('div').textContent='加载失败'"><div style="font-size:14px;font-weight:bold;">${model.name}</div>`;
+            }
+            container.appendChild(card);
+        });
+    } catch (e) {
+        console.log('模型列表加载失败，使用默认卡片');
+    }
+}
+
+// 选择模型
+function selectModel(model) {
+    if (model.type === 'svg' || model.id === 'default') {
+        useDefault();
+    } else if (model.type === 'live2d') {
+        switchAvatar({type:'live2d', url:model.url, name:model.name});
+        showMainApp();
+    } else {
+        switchAvatar({type:'image', url:model.url, name:model.name});
+        showMainApp();
+    }
+}
+
+// 快速选择 Live2D（备用）
+function selectLive2D() {
+    switchAvatar({type:'live2d', url:'/static/live2d/haru/haru_greeter_pro_jp.model3.json', name:'小春'});
+    showMainApp();
+}
+
+function useDefault() {
+    if (typeof switchAvatar === 'function') switchAvatar({type:'svg', id:'default'});
+    showMainApp();
+}
+
+function quickStart() {
+    showMainApp();
+}
+
+function showMainApp() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'flex';
+}
+
+// 页面加载时显示启动界面
+document.addEventListener('DOMContentLoaded', () => {
+    const app = document.querySelector('.app');
+    if (app) { app.id = 'mainApp'; app.style.display = 'none'; }
+    const startScreen = document.getElementById('startScreen');
+    if (startScreen) startScreen.style.display = 'flex';
+    loadModels();
+});
+</script>
 </body></html>

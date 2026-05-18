@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Haru 测试</title>
+<script src="/static/live2d-widget/L2Dwidget.min.js"></script>
+</head>
+<body>
+<p>如果成功，右下角会出现 Haru。请等待 5 秒。</p>
+<script>
+L2Dwidget.init({
+    model: { jsonPath: '/static/live2d/haru/runtime/haru_greeter_t05.model3.json' },
+    display: { position: 'right', width: 300, height: 400, hOffset: 0, vOffset: -100 },
+    mobile: { show: false }
+});
+console.log('已调用 L2Dwidget.init');
+</script>
+</body></html>

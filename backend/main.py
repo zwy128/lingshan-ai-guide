@@ -1,9 +1,35 @@
+
+import re
+
+def clean_text_for_tts(text):
+    """移除文本中的emoji和特殊图标，防止TTS读出乱码"""
+    emoji_pattern = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        u"\U00002702-\U000027B0"
+        u"\U000024C2-\U0001F251"
+        u"\U0001f926-\U0001f937"
+        u"\U00010000-\U0010ffff"
+        u"\u2640-\u2642"
+        u"\u2600-\u2B55"
+        u"\u200d"
+        u"\u23cf"
+        u"\u23e9"
+        u"\u231a"
+        u"\ufe0f"
+        u"\u3030"
+        "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', text).strip()
+
 from datetime import date, timedelta
 import io, csv
 import os, sys, uuid, subprocess, re, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
@@ -13,6 +39,7 @@ from core.asr_tts import ASRService, TTSService
 from core.logger import InteractionLogger
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 rag = RAGEngine()
@@ -130,6 +157,58 @@ async def get_audio(filename: str):
     if not os.path.exists(path): return Response(status_code=404)
     with open(path, 'rb') as f: content = f.read()
     return Response(content=content, media_type="audio/wav")
+
+
+@app.post("/api/chat/image")
+async def image_chat(text: str = Form(""), file: UploadFile = File(...)):
+    """支持图片提问：用户上传照片并提问，调用 DashScope 多模态大模型"""
+    # 保存上传的图片
+    img_bytes = await file.read()
+    img_path = f"../data/processed/img_{uuid.uuid4().hex[:8]}.jpg"
+    with open(img_path, "wb") as f:
+        f.write(img_bytes)
+    
+    # 调用 DashScope 多模态 API（qwen-vl-plus 支持图片理解）
+    try:
+        import dashscope
+        from dashscope import MultiModalConversation
+        
+        messages = [{
+            "role": "system",
+            "content": [{"text": "你是灵山胜境景区的AI导游小灵，请根据图片和问题，结合景区知识回答。"}]
+        }, {
+            "role": "user",
+            "content": [
+                {"image": f"file://{os.path.abspath(img_path)}"},
+                {"text": text or "请描述这张图片"}
+            ]
+        }]
+        
+        response = MultiModalConversation.call(
+            model="qwen-vl-plus",
+            messages=messages,
+            api_key=os.getenv("DASHSCOPE_API_KEY")
+        )
+        
+        if response.status_code == 200:
+            answer = response.output.choices[0].message.content[0]["text"]
+        else:
+            answer = "抱歉，小灵无法理解这张图片"
+    except Exception as e:
+        print(f"多模态API调用失败: {e}")
+        answer = rag.answer(text)['answer'] if text else "请提供问题描述"
+    
+    # 合成语音
+    clean_answer = remove_emoji(answer)
+    tts_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
+    tts.synthesize(clean_answer, tts_audio)
+    logger.add(text or "图片提问", clean_answer, source="image")
+    
+    return {
+        "answer": clean_answer,
+        "audio_url": f"/api/audio/{os.path.basename(tts_audio)}"
+    }
+
 
 @app.post("/api/chat/clear")
 async def clear():
@@ -280,7 +359,8 @@ async def upload_model(file: UploadFile = File(...)):
 
 @app.get("/api/admin/models")
 async def list_models():
-    models = [{"id": "default", "name": "默认导游小灵", "type": "svg", "url": ""}]
+    models = [{"id": "default", "name": "默认导游小灵", "type": "svg", "url": ""},
+             {"id": "live2d_haru", "name": "小春 (Live2D)", "type": "live2d", "url": "/static/live2d/haru/haru_greeter_pro_jp.model3.json"}]
     if os.path.exists(MODEL_DIR):
         for fname in sorted(os.listdir(MODEL_DIR)):
             if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):

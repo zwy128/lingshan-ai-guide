@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Haru 终极测试</title>
+    <script src="/static/js/pixi.min.js"></script>
+    <script src="/static/js/live2dcubismcore.min.js"></script>
+    <!-- 自写 Cubism 3 模型加载器 -->
+    <script>
+        // 基于官方 SDK 的最小化实现
+        class Live2DLoader {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.gl = canvas.getContext('webgl', { alpha: true });
+                this.model = null;
+                this.frameBuffer = null;
+            }
+
+            async loadModel(url) {
+                const response = await fetch(url);
+                const modelJson = await response.json();
+                
+                // 加载 .moc3 文件
+                const mocUrl = new URL(modelJson.FileReferences.Moc, url).href;
+                const mocData = await fetch(mocUrl).then(r => r.arrayBuffer());
+                
+                // 加载纹理
+                const textures = [];
+                for (const texPath of modelJson.FileReferences.Textures) {
+                    const texUrl = new URL(texPath, url).href;
+                    const img = new Image();
+                    img.src = texUrl;
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    });
+                    textures.push(img);
+                }
+
+                // 使用 Cubism Core 加载模型
+                this.model = Live2DCubismCore.loadModel(mocData);
+                
+                // 创建纹理
+                this.textureInfos = textures.map(img => {
+                    const tex = this.gl.createTexture();
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+                    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, img);
+                    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                    return tex;
+                });
+
+                console.log('✅ 模型加载成功');
+                this.startRendering();
+            }
+
+            startRendering() {
+                const render = () => {
+                    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+                    this.gl.clearColor(0, 0, 0, 0);
+                    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+                    
+                    if (this.model) {
+                        Live2DCubismCore.update(this.model);
+                        // 简化渲染：这里需要完整的着色器程序，实际使用时建议用官方 SDK
+                    }
+                    
+                    requestAnimationFrame(render);
+                };
+                render();
+            }
+        }
+    </script>
+</head>
+<body>
+    <canvas id="live2dCanvas" width="300" height="400" style="border:1px solid #ccc;"></canvas>
+    <script>
+        const canvas = document.getElementById('live2dCanvas');
+        const loader = new Live2DLoader(canvas);
+
+        const modelUrl = 'https://tour-guide-ai.oss-cn-shanghai.aliyuncs.com/haru_greeter_pro_jp/runtime/haru_greeter_t05.model3.json';
+
+        loader.loadModel(modelUrl)
+            .then(() => console.log('✅ 初始化完成'))
+            .catch(err => console.error('❌ 加载失败:', err));
+    </script>
+</body>
+</html>

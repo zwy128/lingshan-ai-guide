@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+        #live2d-widget { position: absolute !important; left: 0 !important; top: 0 !important; }
+        canvas { width: 100% !important; height: 100% !important; }
+    </style>
+
+    <meta charset="UTF-8">
+    <script src="/static/live2d-widget/L2Dwidget.min.js"></script>
+    <style>
+        /* 确保背景透明，模型居中 */
+        body { margin: 0; padding: 0; background: transparent; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <script>
+        // 直接初始化，使用 left 位置，这样它就在容器中央
+        L2Dwidget.init({
+        model: { jsonPath: '/static/live2d-widget/node_modules/live2d-widget-model-shizuku/assets/shizuku.model.json' },
+        display: {
+            position: 'left',
+            width: 300,
+            height: 400,
+            hOffset: 0,
+            vOffset: 0
+        },
+        mobile: { show: true },
+        react: { opacityDefault: 1, opacityOnHover: 1 }
+    });
+
+        // 暴露口型控制函数
+        let modelRef = null;
+        
+        // 获取模型引用
+        setTimeout(() => {
+            try {
+                modelRef = L2Dwidget.emit('model');
+                console.log('✅ 模型引用获取成功');
+            } catch(e) {
+                console.warn('⚠️ 模型引用获取失败');
+            }
+        }, 1000);
+
+        // 供父窗口调用的口型控制函数
+        window.startMouthSync = function() {
+            if (!modelRef || !modelRef.internalModel) {
+                try { modelRef = L2Dwidget.emit('model'); } catch(e) {}
+                if (!modelRef || !modelRef.internalModel) return;
+            }
+            window.mouthTimer = setInterval(function() {
+                try {
+                    var value = Math.random() * 0.5 + 0.3;
+                    modelRef.internalModel.motionManager.updateFaceParameter('ParamMouthOpenY', value);
+                } catch(e) {}
+            }, 80);
+        };
+
+        window.stopMouthSync = function() {
+            if (window.mouthTimer) clearInterval(window.mouthTimer);
+            if (modelRef && modelRef.internalModel) {
+                try {
+                    modelRef.internalModel.motionManager.updateFaceParameter('ParamMouthOpenY', 0);
+                } catch(e) {}
+            }
+        };
+    </script>
+</body>
+</html>

@@ -53,21 +53,8 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 .option-card .label{font-size:14px;font-weight:bold}
 
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism2.min.js"></script>
-
 </head>
 <body>
-<script>
-function showMainApp(){var s=document.getElementById('startScreen');var m=document.getElementById('mainApp');if(s)s.style.display='none';if(m){m.style.display='flex';m.style.visibility='visible';}}
-function useDefault(){showMainApp();}
-function quickStart(){showMainApp();}
-function startWithLive2D(){if(typeof initLive2D==='function')initLive2D();showMainApp();}
-function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=new FormData();form.append('file',file);fetch('/api/admin/upload-avatar',{method:'POST',body:form}).then(function(r){return r.json()}).then(function(data){if(data.url)showMainApp();else alert('上传失败');}).catch(function(){alert('网络错误');});}
-</script>
-
 
 
         
@@ -98,22 +85,15 @@ function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
             <label for="avatarFile" style="display:block;cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;"></label>
             <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"/><circle cx="12" cy="11" r="3"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">📷</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">导入本地形象</div>
             <div style="font-size:0.85em;opacity:0.7;">从电脑选择图片</div>
         </div>
-            <!-- 数字人导游卡片 -->
-    <div onclick="startWithLive2D()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-      <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><rect x="4" y="4" width="16" height="16" rx="4" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="10" r="3" fill="white"/><path d="M8 16c0-1.66 1.79-3 4-3s4 1.34 4 3" fill="white"/></svg>
-      <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">数字人导游</div>
-      <div style="font-size:0.85em;opacity:0.7;">Live2D 口型同步</div>
-    </div>
-
-    <!-- 快速进入卡片 -->
+        <!-- 快速进入卡片 -->
         <div onclick="quickStart()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;"
              onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">⚡</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">快速进入</div>
             <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
         </div>
@@ -467,92 +447,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startScreen) startScreen.style.display = 'flex';
 });
 </script>
-
-<script>
-// ===== Audio 全局单例 + 音量分析 =====
-(function(){
-  var _ga=new Audio();_ga.crossOrigin='anonymous';
-  window._globalAudio=_ga;
-  var _origAudio=window.Audio;
-  window.Audio=function(src){
-    if(src)_ga.src=src;
-    _ga.onplay=null;_ga.onended=null;_ga.onerror=null;
-    return _ga;
-  };
-  var ctx,anl,inited=false;
-  window.currentVolume=0;window.smoothedVolume=0;
-  function initCtx(){
-    if(inited)return;
-    try{
-      ctx=new(window.AudioContext||window.webkitAudioContext)();
-      anl=ctx.createAnalyser();anl.fftSize=256;
-      var source=ctx.createMediaElementSource(_ga);
-      source.connect(anl);anl.connect(ctx.destination);
-      inited=true;
-    }catch(e){console.warn('音频分析初始化失败',e);}
-  }
-  function updVol(){
-    if(_ga.paused){window.currentVolume=0;requestAnimationFrame(updVol);return;}
-    if(!anl){requestAnimationFrame(updVol);return;}
-    var d=new Uint8Array(anl.frequencyBinCount);anl.getByteTimeDomainData(d);
-    var s=0;for(var i=0;i<d.length;i++){var v=(d[i]-128)/128;s+=v*v;}
-    window.currentVolume=Math.sqrt(s/d.length);
-    requestAnimationFrame(updVol);
-  }
-  _ga.addEventListener('play',function(){
-    initCtx();
-    if(ctx&&ctx.state==='suspended')ctx.resume();
-    updVol();
-  });
-  _ga.addEventListener('pause',function(){window.currentVolume=0;});
-})();
-
-// ===== Live2D Shizuku + 恒速收嘴口型 =====
-window.isLive2DActive=false;
-async function initLive2D(){
-  window.isLive2DActive=true;
-  var container=document.getElementById('avatarContainer');
-  if(!container)return;
-  container.innerHTML='';
-  var nd=container.parentElement.querySelector('.name-display');
-  if(nd)nd.style.display='none';
-  try{
-    if(typeof PIXI==='undefined'||!PIXI.live2d||!PIXI.live2d.Live2DModel){
-      throw new Error('Live2D 库未加载，请检查网络');
-    }
-    var app=new PIXI.Application({
-      width:container.clientWidth||380,
-      height:container.clientHeight||500,
-      transparent:true,autoDensity:true,
-      resolution:window.devicePixelRatio||2
-    });
-    container.appendChild(app.view);
-
-    var model=await PIXI.live2d.Live2DModel.from('/static/models/shizuku/shizuku.model.json');
-    app.stage.addChild(model);
-    model.anchor.set(0.5,0.5);
-    model.x=app.screen.width/2;
-    model.y=app.screen.height/2;
-    var sc=Math.min(app.screen.width/model.width,app.screen.height/model.height);
-    model.scale.set(sc*0.9);
-
-    // Cubism 2 口型驱动
-    var coreModel=model.internalModel.coreModel;
-    var origUpdate=coreModel.update.bind(coreModel);
-    coreModel.update=function(){
-      var tv=window.currentVolume<0.02?0:window.currentVolume;
-      tv=Math.min(1,Math.pow(tv*12,1.2));
-      if(tv>window.smoothedVolume)window.smoothedVolume+=(tv-window.smoothedVolume)*0.5;
-      else window.smoothedVolume=Math.max(tv,window.smoothedVolume-0.1);
-      this.setParamFloat("PARAM_MOUTH_OPEN_Y",window.smoothedVolume);
-      origUpdate();
-    };
-    console.log('Live2D Shizuku + 口型同步 加载成功');
-  }catch(e){
-    console.error('Live2D 加载失败:',e);
-    container.innerHTML='<div style="color:white;padding:20px;text-align:center;">模型加载失败<br>'+e.message+'</div>';
-  }
-}
-</script>
-
 </body></html>

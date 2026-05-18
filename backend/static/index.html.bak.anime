@@ -53,21 +53,8 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 .option-card .label{font-size:14px;font-weight:bold}
 
 </style>
-
-<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism2.min.js"></script>
-
 </head>
 <body>
-<script>
-function showMainApp(){var s=document.getElementById('startScreen');var m=document.getElementById('mainApp');if(s)s.style.display='none';if(m){m.style.display='flex';m.style.visibility='visible';}}
-function useDefault(){showMainApp();}
-function quickStart(){showMainApp();}
-function startWithLive2D(){if(typeof initLive2D==='function')initLive2D();showMainApp();}
-function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=new FormData();form.append('file',file);fetch('/api/admin/upload-avatar',{method:'POST',body:form}).then(function(r){return r.json()}).then(function(data){if(data.url)showMainApp();else alert('上传失败');}).catch(function(){alert('网络错误');});}
-</script>
-
 
 
         
@@ -98,22 +85,15 @@ function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
             <label for="avatarFile" style="display:block;cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;"></label>
             <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"/><circle cx="12" cy="11" r="3"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">📷</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">导入本地形象</div>
             <div style="font-size:0.85em;opacity:0.7;">从电脑选择图片</div>
         </div>
-            <!-- 数字人导游卡片 -->
-    <div onclick="startWithLive2D()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-      <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><rect x="4" y="4" width="16" height="16" rx="4" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="10" r="3" fill="white"/><path d="M8 16c0-1.66 1.79-3 4-3s4 1.34 4 3" fill="white"/></svg>
-      <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">数字人导游</div>
-      <div style="font-size:0.85em;opacity:0.7;">Live2D 口型同步</div>
-    </div>
-
-    <!-- 快速进入卡片 -->
+        <!-- 快速进入卡片 -->
         <div onclick="quickStart()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;"
              onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
              onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+            <div style="font-size:70px;margin-bottom:20px;line-height:1">⚡</div>
             <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">快速进入</div>
             <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
         </div>
@@ -126,41 +106,69 @@ function uploadAndEnter(input){var file=input.files[0];if(!file)return;var form=
 <div class="human-panel">
 <div class="avatar-area" id="avatarContainer">
 <!-- 默认 SVG 数字人 -->
-<svg id="avatarSvg" width="220" height="310" viewBox="0 0 220 320">
-  <defs><radialGradient id="gg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.2"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></radialGradient></defs>
-  <circle cx="110" cy="120" r="100" fill="url(#gg)"/>
-  <g id="bodyGroup">
-    <rect x="65" y="195" width="90" height="80" rx="20" fill="#667eea"/>
-    <ellipse cx="110" cy="270" rx="55" ry="45" fill="#667eea"/>
-    <path d="M110 190 L100 210 L110 235 L120 210 Z" fill="#FFD700"/>
-    <rect x="80" y="222" width="60" height="16" rx="4" fill="#FFD700"/>
-    <text x="110" y="234" text-anchor="middle" font-size="8" fill="#4a3728" font-weight="bold">导游·小灵</text>
-  </g>
-  <g id="leftHand"><circle cx="52" cy="230" r="18" fill="#FFE4C4"/></g>
-  <g id="rightHand"><circle cx="168" cy="230" r="18" fill="#FFE4C4"/></g>
-  <g id="headGroup">
-    <circle cx="110" cy="110" r="72" fill="#FFE4C4"/>
-    <ellipse cx="110" cy="55" rx="82" ry="48" fill="#4a3728"/>
-    <path d="M38 60 Q52 98 72 78 Q88 108 100 72 Q115 102 130 78 Q148 98 182 60 Q170 28 110 22 Q50 28 38 60Z" fill="#4a3728"/>
-    <path id="ahoge" d="M110 22 Q115 -8 132 -12" stroke="#4a3728" stroke-width="3" fill="none" stroke-linecap="round"/>
-    <ellipse id="lBrow" cx="82" cy="88" rx="13" ry="4" fill="#5a4030"/>
-    <ellipse id="rBrow" cx="138" cy="88" rx="13" ry="4" fill="#5a4030"/>
-    <ellipse cx="83" cy="104" rx="15" ry="18" fill="white"/>
-    <circle id="lPupil" cx="86" cy="105" r="9" fill="#1a1a2e"/>
-    <circle cx="90" cy="99" r="4.5" fill="white"/>
-    <circle cx="82" cy="109" r="2" fill="white"/>
-    <ellipse cx="137" cy="104" rx="15" ry="18" fill="white"/>
-    <circle id="rPupil" cx="140" cy="105" r="9" fill="#1a1a2e"/>
-    <circle cx="144" cy="99" r="4.5" fill="white"/>
-    <circle cx="136" cy="109" r="2" fill="white"/>
-    <ellipse cx="110" cy="125" rx="6" ry="5" fill="#F0C8A0"/>
-    <path id="svgMouth" d="M100 142 Q110 150 120 142" stroke="#d4786a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
-    <ellipse id="lBlush" cx="65" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/>
-    <ellipse id="rBlush" cx="155" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/>
-    <path d="M58 88 Q40 93 42 118 Q44 142 58 148" stroke="#333" stroke-width="3" fill="none"/>
-    <rect x="37" y="98" width="7" height="18" rx="3" fill="#333"/>
-    <circle cx="40" cy="90" r="3" fill="#00ff88"/>
-  </g>
+<svg id="avatarSvg" width="240" height="320" viewBox="0 0 240 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="skin" cx="50%" cy="50%"><stop offset="0%" stop-color="#FFE0C0"/><stop offset="100%" stop-color="#F0C8A0"/></radialGradient>
+    <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3a3028"/><stop offset="100%" stop-color="#2a2018"/></linearGradient>
+  </defs>
+
+  <!-- 身体/西装外套 -->
+  <ellipse cx="120" cy="280" rx="80" ry="50" fill="#1e3a5f"/>
+  <rect x="60" y="220" width="120" height="60" rx="15" fill="#1e3a5f"/>
+  <!-- 衬衫领 -->
+  <path d="M120 215 L100 240 L120 255 L140 240 Z" fill="white"/>
+  <!-- 领带 -->
+  <path d="M115 235 L110 255 L120 270 L130 255 L125 235 Z" fill="#c0392b"/>
+  <!-- 名牌 -->
+  <rect x="90" y="250" width="60" height="16" rx="4" fill="#FFD700"/>
+  <text x="120" y="262" text-anchor="middle" font-size="8" fill="#1a1a2e" font-weight="bold">导游·小灵</text>
+
+  <!-- 手（放在身前） -->
+  <ellipse cx="180" cy="245" rx="18" ry="22" fill="url(#skin)"/>
+  <ellipse cx="60" cy="245" rx="18" ry="22" fill="url(#skin)"/>
+
+  <!-- 头 -->
+  <ellipse cx="120" cy="120" rx="65" ry="75" fill="url(#skin)"/>
+  <!-- 耳朵 -->
+  <ellipse cx="57" cy="120" rx="10" ry="15" fill="url(#skin)"/>
+  <ellipse cx="183" cy="120" rx="10" ry="15" fill="url(#skin)"/>
+
+  <!-- 头发 -->
+  <ellipse cx="120" cy="65" rx="75" ry="45" fill="url(#hairGrad)"/>
+  <path d="M50 70 Q65 100 85 85 Q100 115 120 90 Q140 115 155 85 Q175 100 190 70 Q180 30 120 25 Q60 30 50 70Z" fill="url(#hairGrad)"/>
+  <!-- 刘海细节 -->
+  <path d="M95 55 Q110 80 120 55 Q135 75 145 55" stroke="#4a3a2a" stroke-width="2" fill="none"/>
+
+  <!-- 眉毛 -->
+  <path d="M80 95 Q90 88 100 95" stroke="#5a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M140 95 Q150 88 160 95" stroke="#5a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- 眼睛 -->
+  <ellipse cx="90" cy="110" rx="14" ry="16" fill="white"/>
+  <ellipse cx="150" cy="110" rx="14" ry="16" fill="white"/>
+  <!-- 瞳孔 -->
+  <circle cx="93" cy="112" r="8" fill="#1a1a2e"/>
+  <circle cx="153" cy="112" r="8" fill="#1a1a2e"/>
+  <!-- 高光 -->
+  <circle cx="96" cy="107" r="3" fill="white"/>
+  <circle cx="156" cy="107" r="3" fill="white"/>
+  <circle cx="90" cy="116" r="1.5" fill="white"/>
+  <circle cx="150" cy="116" r="1.5" fill="white"/>
+
+  <!-- 鼻子 -->
+  <ellipse cx="120" cy="130" rx="5" ry="4" fill="#E8B8A0"/>
+
+  <!-- 嘴巴（动画） -->
+  <path id="svgMouth" d="M105 145 Q120 155 135 145" stroke="#c4706a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
+
+  <!-- 腮红 -->
+  <ellipse cx="75" cy="125" rx="10" ry="5" fill="#FFB0B0" opacity="0.3"/>
+  <ellipse cx="165" cy="125" rx="10" ry="5" fill="#FFB0B0" opacity="0.3"/>
+
+  <!-- 耳麦 -->
+  <path d="M45 105 Q30 110 35 130 Q38 150 50 155" stroke="#333" stroke-width="3" fill="none"/>
+  <rect x="27" y="115" width="8" height="20" rx="4" fill="#333"/>
+  <circle cx="30" cy="105" r="3" fill="#00ff88"/>
 </svg>
 <div class="name-display"><span style="color:#00ff88">●</span> 小灵<div class="role">AI 智慧导游</div></div>
 </div>
@@ -329,25 +337,70 @@ async function loadAvatars(){
 function switchAvatar(avatar){
   const container=document.getElementById('avatarContainer');
   if(avatar.type==='svg'||avatar.id==='default'){
-    container.innerHTML=`<svg id="avatarSvg" width="220" height="310" viewBox="0 0 220 320">
-      <defs><radialGradient id="gg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.2"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></radialGradient></defs>
-      <circle cx="110" cy="120" r="100" fill="url(#gg)"/>
-      <g id="bodyGroup"><rect x="65" y="195" width="90" height="80" rx="20" fill="#667eea"/><ellipse cx="110" cy="270" rx="55" ry="45" fill="#667eea"/><path d="M110 190 L100 210 L110 235 L120 210 Z" fill="#FFD700"/><rect x="80" y="222" width="60" height="16" rx="4" fill="#FFD700"/><text x="110" y="234" text-anchor="middle" font-size="8" fill="#4a3728" font-weight="bold">导游·小灵</text></g>
-      <g id="leftHand"><circle cx="52" cy="230" r="18" fill="#FFE4C4"/></g>
-      <g id="rightHand"><circle cx="168" cy="230" r="18" fill="#FFE4C4"/></g>
-      <g id="headGroup">
-        <circle cx="110" cy="110" r="72" fill="#FFE4C4"/><ellipse cx="110" cy="55" rx="82" ry="48" fill="#4a3728"/>
-        <path d="M38 60 Q52 98 72 78 Q88 108 100 72 Q115 102 130 78 Q148 98 182 60 Q170 28 110 22 Q50 28 38 60Z" fill="#4a3728"/>
-        <path id="ahoge" d="M110 22 Q115 -8 132 -12" stroke="#4a3728" stroke-width="3" fill="none" stroke-linecap="round"/>
-        <ellipse id="lBrow" cx="82" cy="88" rx="13" ry="4" fill="#5a4030"/><ellipse id="rBrow" cx="138" cy="88" rx="13" ry="4" fill="#5a4030"/>
-        <ellipse cx="83" cy="104" rx="15" ry="18" fill="white"/><circle id="lPupil" cx="86" cy="105" r="9" fill="#1a1a2e"/><circle cx="90" cy="99" r="4.5" fill="white"/><circle cx="82" cy="109" r="2" fill="white"/>
-        <ellipse cx="137" cy="104" rx="15" ry="18" fill="white"/><circle id="rPupil" cx="140" cy="105" r="9" fill="#1a1a2e"/><circle cx="144" cy="99" r="4.5" fill="white"/><circle cx="136" cy="109" r="2" fill="white"/>
-        <ellipse cx="110" cy="125" rx="6" ry="5" fill="#F0C8A0"/>
-        <path id="svgMouth" d="M100 142 Q110 150 120 142" stroke="#d4786a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
-        <ellipse id="lBlush" cx="65" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/><ellipse id="rBlush" cx="155" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/>
-        <path d="M58 88 Q40 93 42 118 Q44 142 58 148" stroke="#333" stroke-width="3" fill="none"/><rect x="37" y="98" width="7" height="18" rx="3" fill="#333"/><circle cx="40" cy="90" r="3" fill="#00ff88"/>
-      </g>
-    </svg>`;
+    container.innerHTML=`<svg id="avatarSvg" width="240" height="320" viewBox="0 0 240 340" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="skin" cx="50%" cy="50%"><stop offset="0%" stop-color="#FFE0C0"/><stop offset="100%" stop-color="#F0C8A0"/></radialGradient>
+    <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3a3028"/><stop offset="100%" stop-color="#2a2018"/></linearGradient>
+  </defs>
+
+  <!-- 身体/西装外套 -->
+  <ellipse cx="120" cy="280" rx="80" ry="50" fill="#1e3a5f"/>
+  <rect x="60" y="220" width="120" height="60" rx="15" fill="#1e3a5f"/>
+  <!-- 衬衫领 -->
+  <path d="M120 215 L100 240 L120 255 L140 240 Z" fill="white"/>
+  <!-- 领带 -->
+  <path d="M115 235 L110 255 L120 270 L130 255 L125 235 Z" fill="#c0392b"/>
+  <!-- 名牌 -->
+  <rect x="90" y="250" width="60" height="16" rx="4" fill="#FFD700"/>
+  <text x="120" y="262" text-anchor="middle" font-size="8" fill="#1a1a2e" font-weight="bold">导游·小灵</text>
+
+  <!-- 手（放在身前） -->
+  <ellipse cx="180" cy="245" rx="18" ry="22" fill="url(#skin)"/>
+  <ellipse cx="60" cy="245" rx="18" ry="22" fill="url(#skin)"/>
+
+  <!-- 头 -->
+  <ellipse cx="120" cy="120" rx="65" ry="75" fill="url(#skin)"/>
+  <!-- 耳朵 -->
+  <ellipse cx="57" cy="120" rx="10" ry="15" fill="url(#skin)"/>
+  <ellipse cx="183" cy="120" rx="10" ry="15" fill="url(#skin)"/>
+
+  <!-- 头发 -->
+  <ellipse cx="120" cy="65" rx="75" ry="45" fill="url(#hairGrad)"/>
+  <path d="M50 70 Q65 100 85 85 Q100 115 120 90 Q140 115 155 85 Q175 100 190 70 Q180 30 120 25 Q60 30 50 70Z" fill="url(#hairGrad)"/>
+  <!-- 刘海细节 -->
+  <path d="M95 55 Q110 80 120 55 Q135 75 145 55" stroke="#4a3a2a" stroke-width="2" fill="none"/>
+
+  <!-- 眉毛 -->
+  <path d="M80 95 Q90 88 100 95" stroke="#5a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M140 95 Q150 88 160 95" stroke="#5a4030" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+  <!-- 眼睛 -->
+  <ellipse cx="90" cy="110" rx="14" ry="16" fill="white"/>
+  <ellipse cx="150" cy="110" rx="14" ry="16" fill="white"/>
+  <!-- 瞳孔 -->
+  <circle cx="93" cy="112" r="8" fill="#1a1a2e"/>
+  <circle cx="153" cy="112" r="8" fill="#1a1a2e"/>
+  <!-- 高光 -->
+  <circle cx="96" cy="107" r="3" fill="white"/>
+  <circle cx="156" cy="107" r="3" fill="white"/>
+  <circle cx="90" cy="116" r="1.5" fill="white"/>
+  <circle cx="150" cy="116" r="1.5" fill="white"/>
+
+  <!-- 鼻子 -->
+  <ellipse cx="120" cy="130" rx="5" ry="4" fill="#E8B8A0"/>
+
+  <!-- 嘴巴（动画） -->
+  <path id="svgMouth" d="M105 145 Q120 155 135 145" stroke="#c4706a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
+
+  <!-- 腮红 -->
+  <ellipse cx="75" cy="125" rx="10" ry="5" fill="#FFB0B0" opacity="0.3"/>
+  <ellipse cx="165" cy="125" rx="10" ry="5" fill="#FFB0B0" opacity="0.3"/>
+
+  <!-- 耳麦 -->
+  <path d="M45 105 Q30 110 35 130 Q38 150 50 155" stroke="#333" stroke-width="3" fill="none"/>
+  <rect x="27" y="115" width="8" height="20" rx="4" fill="#333"/>
+  <circle cx="30" cy="105" r="3" fill="#00ff88"/>
+</svg>`;
     currentAvatarType='svg';
     setTimeout(()=>{
       headGroup=document.getElementById('headGroup');lPupil=document.getElementById('lPupil');rPupil=document.getElementById('rPupil');
@@ -467,92 +520,4 @@ document.addEventListener('DOMContentLoaded', () => {
     if (startScreen) startScreen.style.display = 'flex';
 });
 </script>
-
-<script>
-// ===== Audio 全局单例 + 音量分析 =====
-(function(){
-  var _ga=new Audio();_ga.crossOrigin='anonymous';
-  window._globalAudio=_ga;
-  var _origAudio=window.Audio;
-  window.Audio=function(src){
-    if(src)_ga.src=src;
-    _ga.onplay=null;_ga.onended=null;_ga.onerror=null;
-    return _ga;
-  };
-  var ctx,anl,inited=false;
-  window.currentVolume=0;window.smoothedVolume=0;
-  function initCtx(){
-    if(inited)return;
-    try{
-      ctx=new(window.AudioContext||window.webkitAudioContext)();
-      anl=ctx.createAnalyser();anl.fftSize=256;
-      var source=ctx.createMediaElementSource(_ga);
-      source.connect(anl);anl.connect(ctx.destination);
-      inited=true;
-    }catch(e){console.warn('音频分析初始化失败',e);}
-  }
-  function updVol(){
-    if(_ga.paused){window.currentVolume=0;requestAnimationFrame(updVol);return;}
-    if(!anl){requestAnimationFrame(updVol);return;}
-    var d=new Uint8Array(anl.frequencyBinCount);anl.getByteTimeDomainData(d);
-    var s=0;for(var i=0;i<d.length;i++){var v=(d[i]-128)/128;s+=v*v;}
-    window.currentVolume=Math.sqrt(s/d.length);
-    requestAnimationFrame(updVol);
-  }
-  _ga.addEventListener('play',function(){
-    initCtx();
-    if(ctx&&ctx.state==='suspended')ctx.resume();
-    updVol();
-  });
-  _ga.addEventListener('pause',function(){window.currentVolume=0;});
-})();
-
-// ===== Live2D Shizuku + 恒速收嘴口型 =====
-window.isLive2DActive=false;
-async function initLive2D(){
-  window.isLive2DActive=true;
-  var container=document.getElementById('avatarContainer');
-  if(!container)return;
-  container.innerHTML='';
-  var nd=container.parentElement.querySelector('.name-display');
-  if(nd)nd.style.display='none';
-  try{
-    if(typeof PIXI==='undefined'||!PIXI.live2d||!PIXI.live2d.Live2DModel){
-      throw new Error('Live2D 库未加载，请检查网络');
-    }
-    var app=new PIXI.Application({
-      width:container.clientWidth||380,
-      height:container.clientHeight||500,
-      transparent:true,autoDensity:true,
-      resolution:window.devicePixelRatio||2
-    });
-    container.appendChild(app.view);
-
-    var model=await PIXI.live2d.Live2DModel.from('/static/models/shizuku/shizuku.model.json');
-    app.stage.addChild(model);
-    model.anchor.set(0.5,0.5);
-    model.x=app.screen.width/2;
-    model.y=app.screen.height/2;
-    var sc=Math.min(app.screen.width/model.width,app.screen.height/model.height);
-    model.scale.set(sc*0.9);
-
-    // Cubism 2 口型驱动
-    var coreModel=model.internalModel.coreModel;
-    var origUpdate=coreModel.update.bind(coreModel);
-    coreModel.update=function(){
-      var tv=window.currentVolume<0.02?0:window.currentVolume;
-      tv=Math.min(1,Math.pow(tv*12,1.2));
-      if(tv>window.smoothedVolume)window.smoothedVolume+=(tv-window.smoothedVolume)*0.5;
-      else window.smoothedVolume=Math.max(tv,window.smoothedVolume-0.1);
-      this.setParamFloat("PARAM_MOUTH_OPEN_Y",window.smoothedVolume);
-      origUpdate();
-    };
-    console.log('Live2D Shizuku + 口型同步 加载成功');
-  }catch(e){
-    console.error('Live2D 加载失败:',e);
-    container.innerHTML='<div style="color:white;padding:20px;text-align:center;">模型加载失败<br>'+e.message+'</div>';
-  }
-}
-</script>
-
 </body></html>
