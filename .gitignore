@@ -14,3 +14,4 @@ data/interaction_log.json
 Thumbs.db
 .cache/
 pretrained_models/
+Miniconda3-latest-Linux-x86_64.sh
