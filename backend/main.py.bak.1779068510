@@ -1,11 +1,9 @@
-from datetime import date, timedelta
-import io, csv
 import os, sys, uuid, subprocess, re, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, HTMLResponse, StreamingResponse
+from fastapi.responses import Response, HTMLResponse
 from pydantic import BaseModel
 
 from core.rag_engine import RAGEngine
@@ -201,65 +199,6 @@ async def delete_avatar(filename: str):
         os.remove(filepath)
         return {"status": "ok"}
     return {"error": "文件不存在"}
-
-
-
-@app.get("/api/admin/export")
-async def export_data(format: str = "json"):
-    logs = logger._read(logger.log_path)
-    if format == "csv":
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=["timestamp","date","question","answer","duration","source"])
-        writer.writeheader()
-        writer.writerows(logs)
-        return StreamingResponse(iter([output.getvalue()]), media_type="text/csv",
-                                 headers={"Content-Disposition": "attachment; filename=interaction_log.csv"})
-    else:
-        return logs
-
-@app.get("/api/admin/feedbacks")
-async def get_feedbacks():
-    return logger._read(logger.feedback_path)
-
-@app.get("/api/admin/stats/daily")
-async def daily_stats():
-    logs = logger._read(logger.log_path)
-    daily = {}
-    for l in logs:
-        day = l["date"]
-        daily[day] = daily.get(day, 0) + 1
-    today = date.today()
-    result = []
-    for i in range(6, -1, -1):
-        d = str(today - timedelta(days=i))
-        result.append({"date": d, "count": daily.get(d, 0)})
-    return result
-
-@app.get("/api/admin/documents")
-async def list_documents():
-    doc_dir = os.path.join(BASE_DIR, "..", "data", "raw")
-    files = os.listdir(doc_dir) if os.path.exists(doc_dir) else []
-    return [{"name": f} for f in files if not f.startswith('.')]
-
-@app.post("/api/admin/upload-document")
-async def upload_document(file: UploadFile = File(...)):
-    save_dir = os.path.join(BASE_DIR, "..", "data", "raw")
-    os.makedirs(save_dir, exist_ok=True)
-    filepath = os.path.join(save_dir, file.filename)
-    with open(filepath, "wb") as f:
-        f.write(await file.read())
-    # 重建向量库（可选，这里不自动重建，由用户手动触发）
-    return {"status": "ok", "filename": file.filename}
-
-
-
-@app.post("/api/admin/rebuild-index")
-async def rebuild_index():
-    try:
-        rag.kb.build_vector_store()
-        return {"status": "ok", "message": "向量库已重建"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 
 @app.get("/health")

@@ -97,7 +97,7 @@
         <div class="page-title">知识库文档管理</div>
         <div style="margin-bottom:20px;">
             <input type="file" id="docFile" accept=".txt,.docx,.pdf">
-            <button class="btn" onclick="uploadDocument()">上传新文档</button><button class="btn" onclick="rebuildIndex()" style="margin-left:10px;">重建索引</button>
+            <button class="btn" onclick="uploadDocument()">上传新文档</button>
             <span id="uploadStatus" style="color:#FFD700;margin-left:10px;"></span>
         </div>
         <div class="chart-card">
@@ -201,23 +201,6 @@ async function uploadDocument(){
 // 初始加载
 loadDashboard();
 setInterval(loadDashboard, 10000);
-
-async function rebuildIndex(){
-    if(!confirm('重建索引将使新上传的文档生效，确定继续吗？')) return;
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = '重建中...';
-    try {
-        const res = await fetch('/api/admin/rebuild-index', {method:'POST'});
-        const data = await res.json();
-        alert(data.status === 'ok' ? '索引重建成功！' : '重建失败：'+data.message);
-    } catch(e) {
-        alert('网络错误');
-    }
-    btn.disabled = false;
-    btn.textContent = '重建索引';
-}
-
 </script>
 </body>
 </html>
