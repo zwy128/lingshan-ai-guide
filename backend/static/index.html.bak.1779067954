@@ -9,7 +9,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .star{position:absolute;background:white;border-radius:50%;animation:twinkle 2s infinite alternate}
 @keyframes twinkle{from{opacity:.3}to{opacity:1}}
-.app{width:1000px;height:680px;display:flex!important;margin:0 auto;background:rgba(255,255,255,.96);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:1}
+.app{width:1000px;height:680px;display:flex;background:rgba(255,255,255,.96);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:1}
 .human-panel{width:400px;background:linear-gradient(180deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .avatar-area{position:relative;z-index:2;text-align:center}
 .name-display{color:white;font-size:20px;font-weight:bold;margin-top:10px}
@@ -57,7 +57,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 <body>
 
 
-        
+        <div style="margin-top:20px;font-size:12px;opacity:0.7">选择后可随时在左侧更换形象</div>
     </div>
 </div>
 
@@ -98,11 +98,11 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
             <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
         </div>
     </div>
-    
+    <div style="margin-top:50px;font-size:0.9em;opacity:0.5;">进入后可随时在左侧更换形象</div>
 </div>
 
 <div class="stars" id="stars"></div>
-<div class="app" id="mainApp" style="display:none" >
+<div class="app">
 <div class="human-panel">
 <div class="avatar-area" id="avatarContainer">
 <!-- 默认 SVG 数字人 -->
@@ -356,10 +356,11 @@ document.addEventListener('click',function(e){
 function showMainApp(){
   var startScreen = document.getElementById('startScreen');
   var mainApp = document.getElementById('mainApp');
-  if(startScreen) startScreen.style.display = 'none';
-  if(mainApp) { mainApp.style.display = 'flex'; mainApp.style.visibility = 'visible'; }
+  if(startScreen) startScreen.style.display='none';
+  if(mainApp) mainApp.style.display='flex';
 }
 function useDefault(){
+  if(typeof switchAvatar==='function') switchAvatar({type:'svg',id:'default'});
   showMainApp();
 }
 function quickStart(){
@@ -368,27 +369,32 @@ function quickStart(){
 function uploadAndEnter(input){
   var file = input.files[0];
   if(!file) return;
-  var form = new FormData();
-  form.append('file', file);
-  fetch('/api/admin/upload-avatar', {method:'POST', body:form})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.url){
-        showMainApp();
-      } else {
-        alert('上传失败');
-      }
-    })
-    .catch(function(){ alert('网络错误'); });
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var form = new FormData();
+    form.append('file', file);
+    fetch('/api/admin/upload-avatar', {method:'POST', body:form})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.url){
+          if(typeof switchAvatar==='function') switchAvatar({type:'image', url:data.url, name:file.name});
+          showMainApp();
+        } else {
+          alert('上传失败：'+data.error);
+        }
+      })
+      .catch(function(){alert('网络错误')});
+  };
+  reader.readAsDataURL(file);
 }
-// 确保启动界面显示，主界面隐藏
-(function(){
+// 初始显示启动界面，隐藏主界面
+document.addEventListener('DOMContentLoaded', function(){
+  var app = document.querySelector('.app');
+  if(app) app.id = 'mainApp';
   var startScreen = document.getElementById('startScreen');
-  var mainApp = document.querySelector('.app');
-  if(mainApp) mainApp.id = 'mainApp';
   if(startScreen) startScreen.style.display = 'flex';
-  if(mainApp) mainApp.style.display = 'none';
-})();
+  if(app) app.style.display = 'none';
+});
 
 setTimeout(wave,500);
 </script>

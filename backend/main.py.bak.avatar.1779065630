@@ -160,47 +160,6 @@ async def feedback(req: FeedbackRequest):
     return {"status": "ok"}
 
 
-
-# ========== 数字人形象管理 ==========
-from fastapi import UploadFile
-import shutil
-
-AVATAR_DIR = os.path.join(BASE_DIR, "static", "avatars")
-os.makedirs(AVATAR_DIR, exist_ok=True)
-
-@app.post("/api/admin/upload-avatar")
-async def upload_avatar(file: UploadFile = File(...)):
-    if file.content_type not in ("image/png", "image/jpeg", "image/gif"):
-        return {"error": "仅支持 PNG/JPG/GIF 图片"}
-    filename = f"{uuid.uuid4().hex}_{file.filename}"
-    filepath = os.path.join(AVATAR_DIR, filename)
-    with open(filepath, "wb") as f:
-        f.write(await file.read())
-    return {"url": f"/static/avatars/{filename}", "name": file.filename}
-
-@app.get("/api/admin/avatars")
-async def list_avatars():
-    avatars = [{"id": "default", "name": "默认导游", "type": "svg", "url": ""}]
-    if os.path.exists(AVATAR_DIR):
-        for fname in sorted(os.listdir(AVATAR_DIR)):
-            if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                avatars.append({
-                    "id": fname,
-                    "name": fname.split("_", 1)[-1],
-                    "type": "image",
-                    "url": f"/static/avatars/{fname}"
-                })
-    return avatars
-
-@app.delete("/api/admin/avatars/{filename}")
-async def delete_avatar(filename: str):
-    filepath = os.path.join(AVATAR_DIR, filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
-        return {"status": "ok"}
-    return {"error": "文件不存在"}
-
-
 @app.get("/health")
 async def health():
     return {"status": "ok", "uptime": time.time()}

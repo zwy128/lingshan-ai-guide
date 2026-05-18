@@ -9,7 +9,7 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .star{position:absolute;background:white;border-radius:50%;animation:twinkle 2s infinite alternate}
 @keyframes twinkle{from{opacity:.3}to{opacity:1}}
-.app{width:1000px;height:680px;display:flex!important;margin:0 auto;background:rgba(255,255,255,.96);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:1}
+.app{width:1000px;height:680px;display:flex;background:rgba(255,255,255,.96);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:1}
 .human-panel{width:400px;background:linear-gradient(180deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .avatar-area{position:relative;z-index:2;text-align:center}
 .name-display{color:white;font-size:20px;font-weight:bold;margin-top:10px}
@@ -56,53 +56,34 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 </head>
 <body>
 
-
-        
+<!-- 形象选择模态框 -->
+<div class="modal-overlay" id="avatarModal">
+    <div class="modal-content">
+        <h2>选择您的AI导游形象</h2>
+        <div class="modal-options">
+            <div class="option-card" onclick="useDefault()">
+                <img src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Ccircle cx=\'50\' cy=\'50\' r=\'40\' fill=\'%23FFE4C4\'/%3E%3Ccircle cx=\'35\' cy=\'45\' r=\'5\' fill=\'%231a1a2e\'/%3E%3Ccircle cx=\'65\' cy=\'45\' r=\'5\' fill=\'%231a1a2e\'/%3E%3Cpath d=\'M40 60 Q50 70 60 60\' stroke=\'%23d4786a\' stroke-width=\'3\' fill=\'none\'/%3E%3C/svg%3E" alt="默认形象">
+                <div class="label">默认导游小灵</div>
+            </div>
+            <div class="option-card" id="uploadCard">
+                <label for="avatarFile" style="display:block;cursor:pointer">
+                    <div style="font-size:40px;margin-bottom:10px">+</div>
+                    <div class="label">导入本地形象</div>
+                </label>
+                <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
+                <img id="previewImg" style="max-width:120px;max-height:120px;border-radius:15px;margin:10px auto;display:none">
+            </div>
+            <div class="option-card" onclick="quickStart()">
+                <div style="font-size:40px;margin-bottom:10px">></div>
+                <div class="label">快速进入</div>
+            </div>
+        </div>
+        <div style="margin-top:20px;font-size:12px;opacity:0.7">选择后可随时在左侧更换形象</div>
     </div>
-</div>
-
-
-<!-- 全屏启动选择界面 -->
-<div id="startScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a0533 0%,#2d1b4e 50%,#0d1b3e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;color:white;text-align:center;font-family:'Microsoft YaHei',sans-serif">
-    <h1 style="font-size:2.5em;margin-bottom:10px;font-weight:300;letter-spacing:4px;">灵山胜境</h1>
-    <p style="font-size:1.1em;opacity:0.7;margin-bottom:60px;">—— 选择您的AI导游 ——</p>
-    <div style="display:flex;gap:40px;flex-wrap:wrap;justify-content:center;max-width:900px;width:90%">
-        <!-- 默认形象卡片 -->
-        <div onclick="useDefault()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;"
-             onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
-             onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:20px">
-  <circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.2)"/>
-  <circle cx="12" cy="9" r="3" fill="white"/>
-  <path d="M6 20c0-2.76 2.24-5 6-5s6 2.24 6 5" fill="white"/>
-</svg>
-            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">默认导游小灵</div>
-            <div style="font-size:0.85em;opacity:0.7;">可爱的AI动画形象</div>
-        </div>
-        <!-- 导入本地形象卡片 -->
-        <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;position:relative;"
-             onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
-             onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <label for="avatarFile" style="display:block;cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;"></label>
-            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
-            <div style="font-size:70px;margin-bottom:20px;line-height:1">📷</div>
-            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">导入本地形象</div>
-            <div style="font-size:0.85em;opacity:0.7;">从电脑选择图片</div>
-        </div>
-        <!-- 快速进入卡片 -->
-        <div onclick="quickStart()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;"
-             onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'"
-             onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
-            <div style="font-size:70px;margin-bottom:20px;line-height:1">⚡</div>
-            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">快速进入</div>
-            <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
-        </div>
-    </div>
-    
 </div>
 
 <div class="stars" id="stars"></div>
-<div class="app" id="mainApp" style="display:none" >
+<div class="app">
 <div class="human-panel">
 <div class="avatar-area" id="avatarContainer">
 <!-- 默认 SVG 数字人 -->
@@ -354,41 +335,50 @@ document.addEventListener('click',function(e){
 
 // 形象选择逻辑
 function showMainApp(){
-  var startScreen = document.getElementById('startScreen');
-  var mainApp = document.getElementById('mainApp');
-  if(startScreen) startScreen.style.display = 'none';
-  if(mainApp) { mainApp.style.display = 'flex'; mainApp.style.visibility = 'visible'; }
+  document.getElementById('avatarModal').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
 }
 function useDefault(){
+  if(typeof switchAvatar==='function') switchAvatar({type:'svg',id:'default'});
   showMainApp();
 }
 function quickStart(){
   showMainApp();
 }
 function uploadAndEnter(input){
-  var file = input.files[0];
+  const file = input.files[0];
   if(!file) return;
-  var form = new FormData();
-  form.append('file', file);
-  fetch('/api/admin/upload-avatar', {method:'POST', body:form})
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if(data.url){
-        showMainApp();
-      } else {
-        alert('上传失败');
-      }
-    })
-    .catch(function(){ alert('网络错误'); });
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const preview = document.getElementById('previewImg');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    const form = new FormData();
+    form.append('file', file);
+    fetch('/api/admin/upload-avatar', {method:'POST', body:form})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.url){
+          if(typeof switchAvatar==='function') switchAvatar({type:'image', url:data.url, name:file.name});
+          showMainApp();
+        } else {
+          alert('上传失败：'+data.error);
+        }
+      })
+      .catch(()=>alert('网络错误'));
+  };
+  reader.readAsDataURL(file);
 }
-// 确保启动界面显示，主界面隐藏
-(function(){
-  var startScreen = document.getElementById('startScreen');
-  var mainApp = document.querySelector('.app');
-  if(mainApp) mainApp.id = 'mainApp';
-  if(startScreen) startScreen.style.display = 'flex';
-  if(mainApp) mainApp.style.display = 'none';
-})();
+// 初始显示模态框，隐藏主界面
+document.addEventListener('DOMContentLoaded', function(){
+  // 给主界面加一个 id 以便控制显示
+  const app = document.querySelector('.app');
+  if(app) app.id = 'mainApp';
+  // 默认显示模态框
+  const modal = document.getElementById('avatarModal');
+  if(modal) modal.style.display = 'flex';
+  if(app) app.style.display = 'none';
+});
 
 setTimeout(wave,500);
 </script>
