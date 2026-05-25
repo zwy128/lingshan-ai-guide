@@ -412,12 +412,10 @@ function playAudioFromUrl(audioUrl, fullText){
 
   // Live2D 口型同步 - 在音频创建后立即初始化分析器
   if(isLive2DActive && window.live2dManager){
-    // 立即初始化音频分析器（不要等到 canplaythrough）
     try{
       window.live2dManager.initAudioAnalyser(audio);
     }catch(e){ console.warn('音频分析初始化失败', e); }
     
-    // 在音频开始播放时启动口型同步
     audio.addEventListener('playing', function(){
       window.live2dManager.startSpeaking();
     });
@@ -459,12 +457,10 @@ function playAudioFromUrl(audioUrl, fullText){
     }
   }
 
-  // 修复 play() 被 pause() 中断：延迟50ms播放
   setTimeout(function(){
     audio.play().catch(function(e){ console.warn('音频播放失败', e); });
   }, 50);
 
-  // 根据完整文本播放表情时间线（可选）
   if(fullText && window.sentimentAnalyzer && isLive2DActive){
     var timeline = window.sentimentAnalyzer.analyzeWithTimeline(fullText);
     playExpressionTimeline(timeline);
