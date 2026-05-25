@@ -1,82 +1,71 @@
-import json, os, time
-from datetime import date, timedelta
-from collections import Counter
-from threading import Lock
+"""交互日志记录"""
+import json
+from pathlib import Path
+from typing import List, Dict, Any
+from datetime import datetime
+
 
 class InteractionLogger:
-    def __init__(self, log_path="../data/interaction_log.json"):
-        self.log_path = log_path
-        self.feedback_path = "../data/feedback_log.json"
-        self.lock = Lock()
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        if not os.path.exists(log_path):
-            with open(log_path, 'w', encoding='utf-8') as f:
-                json.dump([], f)
-        if not os.path.exists(self.feedback_path):
-            with open(self.feedback_path, 'w', encoding='utf-8') as f:
+    """记录用户交互日志"""
+
+    def __init__(self):
+        self.log_dir = Path(__file__).parent.parent / "logs"
+        self.log_path = self.log_dir / "interactions.json"
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        if not self.log_path.exists() or self.log_path.stat().st_size == 0:
+            with open(self.log_path, 'w') as f:
                 json.dump([], f)
 
-    def _read(self, path):
-        with self.lock:
-            with open(path, 'r', encoding='utf-8') as f:
+    def _read(self) -> List[Dict[str, Any]]:
+        """读取日志，带容错"""
+        try:
+            with open(self.log_path, 'r') as f:
                 return json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            with open(self.log_path, 'w') as f:
+                json.dump([], f)
+            return []
 
-    def _write(self, path, data):
-        with self.lock:
-            with open(path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+    def _write(self, logs: List[Dict[str, Any]]):
+        with open(self.log_path, 'w') as f:
+            json.dump(logs, f, ensure_ascii=False, indent=2)
 
-    def add(self, question, answer, duration=0.0, source="text"):
-        entry = {
-            "timestamp": time.time(),
-            "date": str(date.today()),
-            "question": question,
-            "answer": answer[:200],
-            "duration": duration,
-            "source": source
-        }
-        logs = self._read(self.log_path)
-        logs.append(entry)
-        self._write(self.log_path, logs)
+    def log(self, user_input: str, ai_response: str, model: str = "", voice: str = ""):
+        logs = self._read()
+        logs.append({
+            "timestamp": datetime.now().isoformat(),
+            "user_input": user_input,
+            "ai_response": ai_response,
+            "model": model,
+            "voice": voice
+        })
+        self._write(logs)
 
-    def add_feedback(self, rating):
-        """rating: 'good', 'neutral', 'bad'"""
-        entry = {
-            "timestamp": time.time(),
-            "date": str(date.today()),
-            "rating": rating
-        }
-        feedbacks = self._read(self.feedback_path)
-        feedbacks.append(entry)
-        self._write(self.feedback_path, feedbacks)
-
-    def get_stats(self):
-        logs = self._read(self.log_path)
-        today = str(date.today())
-        today_logs = [l for l in logs if l["date"] == today]
-        today_count = len(today_logs)
-        week_logs = [l for l in logs if date.fromisoformat(l["date"]) >= date.today() - timedelta(days=date.today().weekday())]
-        week_count = len(week_logs)
-        question_counter = Counter(l["question"] for l in week_logs)
-        top_questions = [{"q": q, "count": c} for q, c in question_counter.most_common(5)]
-        avg_duration = sum(l["duration"] for l in week_logs) / len(week_logs) if week_logs else 0
-
-        # 满意度从反馈日志中计算
-        feedbacks = self._read(self.feedback_path)
-        if feedbacks:
-            good_count = sum(1 for f in feedbacks if f.get("rating") == "good")
-            satisfaction = round(good_count / len(feedbacks) * 100, 1)
-        else:
-            satisfaction = None  # 无数据时前端显示为 "暂无"
-
+    def get_stats(self) -> Dict[str, Any]:
+        logs = self._read()
+        if not logs:
+            return {"total_interactions": 0, "today_interactions": 0,
+                    "average_length": 0, "popular_models": {}, "popular_voices": {}}
+        total = len(logs)
+        today = datetime.now().date()
+        today_count = sum(1 for log in logs
+                          if datetime.fromisoformat(log["timestamp"]).date() == today)
+        total_length = sum(len(log.get("user_input", "")) + len(log.get("ai_response", ""))
+                           for log in logs)
+        model_counts, voice_counts = {}, {}
+        for log in logs:
+            m = log.get("model", "unknown")
+            v = log.get("voice", "unknown")
+            model_counts[m] = model_counts.get(m, 0) + 1
+            voice_counts[v] = voice_counts.get(v, 0) + 1
         return {
-            "today_visitors": today_count,
-            "week_visitors": week_count,
-            "avg_response_time": round(avg_duration, 2),
-            "satisfaction_rate": satisfaction,
-            "top_questions": top_questions
+            "total_interactions": total,
+            "today_interactions": today_count,
+            "average_length": round(total_length / total, 2) if total else 0,
+            "popular_models": dict(sorted(model_counts.items(), key=lambda x: x[1], reverse=True)[:5]),
+            "popular_voices": dict(sorted(voice_counts.items(), key=lambda x: x[1], reverse=True)[:5])
         }
 
-    def get_recent(self, limit=20):
-        logs = self._read(self.log_path)
-        return logs[-limit:]
+    def get_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
+        logs = self._read()
+        return logs[-limit:] if logs else []
