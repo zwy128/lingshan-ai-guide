@@ -85,7 +85,6 @@ class FeedbackRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     text: str
-    voice: str = None
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
@@ -103,7 +102,7 @@ async def text_to_speech(req: ChatRequest):
     result = rag.answer(req.text)
     clean_answer = remove_emoji(result['answer'])
     reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
-    tts.synthesize(clean_answer, reply_audio, voice=req.voice)
+    tts.synthesize(clean_answer, reply_audio)
     duration = time.time() - start
     logger.add(req.text, clean_answer, duration=duration, source="tts")
     return {
@@ -144,7 +143,7 @@ async def voice_chat(file: UploadFile = File(...)):
     result = rag.answer(user_text)
     clean_answer = remove_emoji(result['answer'])
     reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
-    tts.synthesize(clean_answer, reply_audio, voice=None)
+    tts.synthesize(clean_answer, reply_audio)
     duration = time.time() - start
     logger.add(user_text, clean_answer, duration=duration, source="voice")
     return {
