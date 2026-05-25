@@ -69,6 +69,17 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 
 </head>
 <body>
+<div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <a href="/settings.html" 
+       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white; padding: 12px 24px; border-radius: 50px;
+              text-decoration: none; font-size: 1rem;
+              box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+              transition: all 0.3s ease;">
+        ⚙️ 设置
+    </a>
+</div>
+
 <script>
 function showMainApp(){var s=document.getElementById('startScreen');var m=document.getElementById('mainApp');if(s)s.style.display='none';if(m){m.style.display='flex';m.style.visibility='visible';}}
 function useDefault(){showMainApp();}

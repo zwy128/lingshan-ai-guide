@@ -37,7 +37,6 @@ from pydantic import BaseModel
 from core.rag_engine import RAGEngine
 from core.asr_tts import ASRService, TTSService
 from core.logger import InteractionLogger
-from core.config import get_model_list, get_voice_list, validate_model, validate_voice
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -228,11 +227,6 @@ async def admin():
     with open(os.path.join(BASE_DIR, 'static', 'admin.html'), 'r', encoding='utf-8') as f:
         return f.read()
 
-@app.get("/settings.html", response_class=HTMLResponse)
-async def settings():
-    with open(os.path.join(BASE_DIR, 'static', 'settings.html'), 'r', encoding='utf-8') as f:
-        return f.read()
-
 
 from pydantic import BaseModel
 
@@ -387,40 +381,6 @@ async def delete_model(filename: str):
     return {"error": "文件不存在"}
 
 
-
-
-# ========== 模型与音色配置接口 ==========
-@app.get("/api/config/models")
-async def list_models():
-    """获取可用模型列表"""
-    return {"models": get_model_list()}
-
-@app.get("/api/config/voices")
-async def list_voices():
-    """获取可用音色列表"""
-    return {"voices": get_voice_list()}
-
-@app.post("/api/config/set-model")
-async def set_model(model_id: str):
-    """设置当前模型"""
-    valid_model = validate_model(model_id)
-    rag.set_model(valid_model)
-    return {"status": "ok", "current_model": valid_model}
-
-@app.post("/api/config/set-voice")
-async def set_voice(voice_id: str):
-    """设置当前音色"""
-    valid_voice = validate_voice(voice_id)
-    tts.set_voice(valid_voice)
-    return {"status": "ok", "current_voice": valid_voice}
-
-@app.get("/api/config/current")
-async def get_current_config():
-    """获取当前配置"""
-    return {
-        "current_model": rag.current_model,
-        "current_voice": tts.current_voice
-    }
 @app.get("/health")
 async def health():
     return {"status": "ok", "uptime": time.time()}

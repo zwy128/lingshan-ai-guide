@@ -19,8 +19,15 @@ class ASRService:
             return ""
 
 class TTSService:
+    def set_voice(self, voice_id: str):
+        """动态设置音色"""
+        from core.config import validate_voice
+        self.current_voice = validate_voice(voice_id)
+        self.voice = self.current_voice  # 更新实际使用的音色
+
     def __init__(self):
-        self.voice = "zh-CN-XiaoxiaoNeural"
+        self.voice = "zh-CN-XiaoxiaoNeural"  # 默认音色
+        self.current_voice = "zh-CN-XiaoxiaoNeural"  # 当前使用的音色
         print("✅ Edge TTS 就绪 (Xiaoxiao)")
     
     def synthesize(self, text, output_path="output.wav"):

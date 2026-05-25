@@ -33,13 +33,20 @@ def remove_emoji(text):
     return emoji_pattern.sub(r'', text)
 
 class RAGEngine:
+    def set_model(self, model_id: str):
+        """动态设置模型"""
+        from core.config import validate_model
+        self.current_model = validate_model(model_id)
+        self.model = self.current_model  # 更新实际使用的模型
+
     def __init__(self):
         self.kb = KnowledgeBase()
         self.client = OpenAI(
             api_key=os.getenv("DASHSCOPE_API_KEY"),
             base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
         )
-        self.model = "qwen-plus"
+        self.model = "qwen-plus"  # 默认模型
+        self.current_model = "qwen-plus"  # 当前使用的模型
         self.system_prompt = """你是灵山胜境景区的AI数字导游"小灵"。热情亲切。仅根据参考资料回答，不要编造。回答80-150字。"""
     
     def answer(self, user_query: str) -> dict:
