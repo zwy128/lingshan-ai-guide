@@ -69,3 +69,10 @@ class InteractionLogger:
     def get_recent(self, limit: int = 10) -> List[Dict[str, Any]]:
         logs = self._read()
         return logs[-limit:] if logs else []
+
+    def add_feedback(self, rating: str):
+        """记录用户反馈"""
+        logs = self._read()
+        if logs:
+            logs[-1]["feedback"] = rating
+            self._write(logs)

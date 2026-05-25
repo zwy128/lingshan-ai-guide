@@ -26,3 +26,7 @@ Thumbs.db
 # 数据和日志
 *.log
 data/
+
+# 生成文件
+backend/static/audio/
+backend/fix_tts*.sh

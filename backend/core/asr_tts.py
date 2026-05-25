@@ -1,50 +1,57 @@
-from typing import AsyncGenerator
-import logging
+"""语音识别 + 语音合成（稳定版）"""
+from funasr import AutoModel
+import subprocess, os
 
-logger = logging.getLogger(__name__)
+class ASRService:
+    def __init__(self):
+        print("⏳ 加载 ASR...")
+        self.model = AutoModel(
+            model="iic/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
+            device="cpu", disable_update=True
+        )
+        print("✅ ASR 就绪")
+    
+    def transcribe(self, audio_path):
+        try:
+            result = self.model.generate(input=audio_path)
+            return result[0].get('text', '') if result else ""
+        except:
+            return ""
 
-
-class ASR:
-    """语音识别 (ASR) - 支持流式识别"""
+class TTSService:
+    def set_voice(self, voice_id: str):
+        """动态设置音色"""
+        from core.config import validate_voice
+        self.current_voice = validate_voice(voice_id)
+        self.voice = self.current_voice  # 更新实际使用的音色
 
     def __init__(self):
-        # TODO: 初始化 ASR 客户端
-        pass
-
-    async def transcribe(self, audio_file) -> str:
-        """普通语音转文字"""
-        # TODO: 替换为实际的 ASR 调用
-        content = await audio_file.read()
-        logger.info(f"接收到音频数据: {len(content)} bytes")
-        return "游客的语音问题"
-
-    async def transcribe_stream(self, audio_stream) -> AsyncGenerator[str, None]:
-        """流式语音识别 - 实时转写"""
-        # TODO: 接入实时流式 ASR 服务（如阿里云/百度流式语音识别）
-        async for chunk in audio_stream:
-            yield "实时语音片段"
-
-
-class TTS:
-    """语音合成 (TTS) - 支持流式合成"""
-
-    def __init__(self):
-        # TODO: 初始化 TTS 客户端
-        pass
-
-    async def synthesize(self, text: str) -> str:
-        """普通文字转语音"""
-        # TODO: 替换为实际的 TTS 调用
-        logger.info(f"合成语音: {text[:50]}...")
-        return "https://example.com/audio/output.mp3"
-
-    async def synthesize_stream(self, text_stream: AsyncGenerator[str, None]) -> AsyncGenerator[bytes, None]:
-        """流式语音合成 - 边生成边播放"""
-        # TODO: 接入实时流式 TTS 服务
-        async for text_chunk in text_stream:
-            # 模拟音频分片
-            yield b"simulated_audio_chunk_bytes"
-
-
-asr = ASR()
-tts = TTS()
+        self.voice = "zh-CN-XiaoxiaoNeural"  # 默认音色
+        self.current_voice = "zh-CN-XiaoxiaoNeural"  # 当前使用的音色
+        print("✅ Edge TTS 就绪 (Xiaoxiao)")
+    
+    def synthesize(self, text, output_path="output.wav"):
+        # 确保输出路径是绝对路径，避免相对路径问题
+        if not os.path.isabs(output_path):
+            output_path = os.path.join(os.getcwd(), output_path)
+        # 确保目录存在
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        try:
+            subprocess.run([
+                'edge-tts',
+                '--voice', self.voice,
+                '--text', text,
+                '--write-media', output_path
+            ], check=True, capture_output=True)
+        except Exception as e:
+            print(f"⚠️ Edge TTS 失败: {e}")
+            # 降级：生成静默 WAV 文件，避免 404
+            import wave, struct
+            with wave.open(output_path, 'w') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(16000)
+                wf.writeframes(struct.pack('<h', 0) * 16000)
+        
+        return output_path

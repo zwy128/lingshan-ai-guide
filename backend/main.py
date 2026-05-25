@@ -35,7 +35,7 @@ from fastapi.responses import Response, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
 from core.rag_engine import RAGEngine
-from core.asr_tts import ASR, TTS
+from core.asr_tts import ASRService, TTSService
 from core.logger import InteractionLogger
 from core.config import get_model_list, get_voice_list, validate_model, validate_voice
 
@@ -44,8 +44,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 rag = RAGEngine()
-asr = ASR()
-tts = TTS()
+asr = ASRService()
+tts = TTSService()
 logger = InteractionLogger()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -85,6 +85,8 @@ class FeedbackRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     text: str
+    voice: str = ""
+    model: str = ""
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
@@ -94,6 +96,8 @@ async def index():
 @app.post("/api/chat/tts")
 async def text_to_speech(req: ChatRequest):
     start = time.time()
+    if req.voice:
+        tts.set_voice(req.voice)
     preset = get_preset_reply(req.text)
     if preset:
         reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
@@ -128,8 +132,10 @@ async def text_chat(req: ChatRequest):
     }
 
 @app.post("/api/chat/voice")
-async def voice_chat(file: UploadFile = File(...)):
+async def voice_chat(file: UploadFile = File(...), voice: str = Form("")):
     start = time.time()
+    if voice:
+        tts.set_voice(voice)
     raw = f"../data/processed/{uuid.uuid4().hex[:8]}.webm"
     wav = raw.replace('.webm', '.wav')
     with open(raw, "wb") as f: f.write(await file.read())
