@@ -40,6 +40,7 @@ from pydantic import BaseModel
 from core.rag_engine import RAGEngine
 from core.asr_tts import ASRService, TTSService
 from core.logger import InteractionLogger
+from core.analytics import AnalyticsEngine
 from core.config import get_model_list, get_voice_list, validate_model, validate_voice
 
 app = FastAPI()
@@ -50,6 +51,7 @@ rag = RAGEngine()
 asr = ASRService()
 tts = TTSService()
 logger = InteractionLogger()
+analytics = AnalyticsEngine()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -435,6 +437,33 @@ async def get_current_config():
         "current_model": rag.current_model,
         "current_voice": tts.current_voice
     }
+
+
+# ========== 游客感受度报告 ==========
+
+@app.get("/api/admin/sentiment-report")
+async def sentiment_report(days: int = 7):
+    """生成游客感受度报告"""
+    return analytics.generate_report(days=days)
+
+@app.get("/api/admin/sentiment-trend")
+async def sentiment_trend(days: int = 7):
+    """情感趋势数据"""
+    report = analytics.generate_report(days=days)
+    return {"trends": report.get("trends", []), "period": report.get("period", "")}
+
+@app.get("/api/admin/topic-analysis")
+async def topic_analysis(days: int = 7):
+    """游客关注点分析"""
+    report = analytics.generate_report(days=days)
+    return {"topics": report.get("topics", []), "period": report.get("period", "")}
+
+@app.get("/api/admin/service-suggestions")
+async def service_suggestions(days: int = 7):
+    """服务改进建议"""
+    report = analytics.generate_report(days=days)
+    return {"suggestions": report.get("suggestions", []), "period": report.get("period", "")}
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "uptime": time.time()}
