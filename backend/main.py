@@ -372,7 +372,12 @@ async def upload_model(file: UploadFile = File(...)):
 @app.get("/api/admin/models")
 async def list_models():
     models = [{"id": "default", "name": "默认导游小灵", "type": "svg", "url": ""},
-             {"id": "live2d_haru", "name": "小春 (Live2D)", "type": "live2d", "url": "/static/live2d/haru/haru_greeter_pro_jp.model3.json"}]
+             {"id": "shizuku", "name": "雫·清风", "type": "live2d", "url": "/static/models/shizuku/shizuku.model.json"},
+             {"id": "koharu", "name": "小春·春日问候", "type": "live2d", "url": "/static/models/koharu/koharu.model.json"},
+             {"id": "hijiki", "name": "小黑·活力满满", "type": "live2d", "url": "/static/models/hijiki/hijiki.model.json"},
+             {"id": "tororo", "name": "多罗罗·慵懒时光", "type": "live2d", "url": "/static/models/tororo/tororo.model.json"},
+             {"id": "haruto", "name": "晴斗·阳光少年", "type": "live2d", "url": "/static/models/haruto/haruto.model.json"},
+             {"id": "miku", "name": "初音·未来歌姬", "type": "live2d", "url": "/static/models/miku/miku.model.json"}]
     if os.path.exists(MODEL_DIR):
         for fname in sorted(os.listdir(MODEL_DIR)):
             if fname.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
