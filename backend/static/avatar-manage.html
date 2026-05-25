@@ -51,14 +51,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-secondary:hover{background:rgba(255,255,255,.2)}
 .btn-sm{padding:5px 12px;font-size:.8rem}
 
-/* 表情测试面板 */
-.expression-panel{margin-top:10px;padding:10px 15px;background:rgba(0,0,0,.2);border-radius:8px;display:none}
-.expression-panel.show{display:block}
-.expr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.expr-btn{padding:6px;font-size:.75rem;background:rgba(255,255,255,.1);color:#ccc;border:1px solid rgba(255,255,255,.15);border-radius:6px;cursor:pointer;transition:all .2s;text-align:center}
-.expr-btn:hover{background:rgba(233,69,96,.3);color:white;border-color:#e94560}
-.expr-btn.active{background:#e94560;color:white;border-color:#e94560}
-
 /* 上传区域 */
 .upload-section{margin-top:30px;padding:25px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.15);border-radius:12px}
 .upload-zone{border:2px dashed rgba(233,69,96,.3);border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:all .3s}
@@ -81,12 +73,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Toast */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:white;padding:10px 24px;border-radius:20px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
-
-/* 语音配置 */
-.voice-config{margin-top:8px;display:flex;align-items:center;gap:8px}
-.voice-config label{font-size:.8rem;color:#999}
-.voice-config select{background:rgba(255,255,255,.1);color:#e0e0e0;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:4px 8px;font-size:.8rem}
-.voice-config select option{background:#1a1a2e}
 </style>
 </head>
 <body>
@@ -95,7 +81,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <h1>数字人形象管理</h1>
   <div class="nav-btns">
     <a href="/" class="nav-btn">返回主页</a>
-    <a href="/static/settings.html" class="nav-btn">系统设置</a>
   </div>
 </div>
 
