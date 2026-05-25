@@ -91,6 +91,11 @@ async def index():
     with open(os.path.join(BASE_DIR, 'static', 'index.html'), 'r', encoding='utf-8') as f:
         return f.read()
 
+@app.post("/api/config/set-voice")
+async def set_voice(voice_id: str):
+    tts.voice = voice_id
+    return {"status": "ok", "voice": voice_id}
+
 @app.post("/api/chat/tts")
 async def text_to_speech(req: ChatRequest):
     start = time.time()

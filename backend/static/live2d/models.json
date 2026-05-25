@@ -17,7 +17,7 @@
       "name": "小春·温柔少女",
       "type": "live2d",
       "modelUrl": "/static/live2d/node_modules/live2d-widget-model-koharu/assets/koharu.model.json",
-      "voice": "zh-CN-XiaomoNeural"
+      "voice": "zh-CN-XiaoxiaoNeural"
     },
     {
       "id": "haruto",
@@ -45,7 +45,7 @@
       "name": "未来·歌姬初音",
       "type": "live2d",
       "modelUrl": "/static/live2d/node_modules/live2d-widget-model-miku/assets/miku.model.json",
-      "voice": "zh-CN-XiaoxuanNeural"
+      "voice": "zh-CN-XiaoyiNeural"
     }
   ]
 }
