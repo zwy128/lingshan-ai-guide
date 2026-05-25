@@ -1,19 +1,19 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+*.py[cod]
+*$py.class
+*.so
 
-# 虚拟环境
+# 虚拟环境 (极其重要！)
 venv/
 env/
 .venv/
 
-# 环境变量与配置
+# 环境变量
 .env
-*.sqlite3
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo

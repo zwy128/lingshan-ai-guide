@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="/static/js/lazy-loading.js"></script>
+    <script src="/static/js/performance-monitor.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数字人形象管理</title>
+<style>
+/* 表情动画定义 */
+@keyframes expression-neutral { from { opacity: 1; } to { opacity: 1; } }
+@keyframes expression-happy { from { transform: scale(1); } to { transform: scale(1.05); } }
+@keyframes expression-thinking { from { transform: rotate(0deg); } to { transform: rotate(2deg); } }
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:18px 25px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:1.6rem;background:linear-gradient(90deg,#e94560,#0f3460);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-btns{display:flex;gap:8px}
+.nav-btn{color:#e94560;text-decoration:none;font-size:.85rem;padding:7px 16px;border:1px solid #e94560;border-radius:20px;transition:all .3s}
+.nav-btn:hover{background:#e94560;color:#fff}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.section-title{font-size:1.2rem;margin:20px 0 12px;color:#e94560;display:flex;align-items:center;gap:8px}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px;margin-bottom:25px}
+.model-card{background:rgba(255,255,255,.05);border-radius:14px;overflow:hidden;border:2px solid transparent;transition:all .3s;cursor:pointer;position:relative}
+.model-card:hover{transform:translateY(-4px);border-color:rgba(233,69,96,.4);box-shadow:0 8px 25px rgba(233,69,96,.15)}
+.model-card.active{border-color:#e94560;box-shadow:0 0 25px rgba(233,69,96,.3)}
+.model-preview{height:240px;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.model-preview canvas{max-width:100%;max-height:100%}
+.emoji-avatar{font-size:5rem;filter:drop-shadow(0 0 20px rgba(233,69,96,.5))}
+.active-badge{position:absolute;top:8px;right:8px;background:#e94560;color:#fff;padding:3px 10px;border-radius:12px;font-size:.75rem;display:none;z-index:10}
+.model-card.active .active-badge{display:block}
+.model-info{padding:12px 15px}
+.model-name{font-size:1.1rem;font-weight:600;margin-bottom:4px;color:#fff}
+.model-desc{font-size:.85rem;color:#999;margin-bottom:8px;line-height:1.4}
+.model-tags{display:flex;flex-wrap:wrap;gap:5px}
+.tag{background:rgba(233,69,96,.15);color:#e94560;padding:2px 8px;border-radius:10px;font-size:.7rem}
+.upload-zone{background:rgba(255,255,255,.03);border:2px dashed rgba(255,255,255,.2);border-radius:14px;padding:35px;text-align:center;margin-bottom:25px;transition:all .3s;cursor:pointer}
+.upload-zone:hover,.upload-zone.dragover{border-color:#e94560;background:rgba(233,69,96,.05)}
+.upload-icon{font-size:2.5rem;margin-bottom:8px}
+.upload-text{font-size:1rem;color:#999;margin-bottom:6px}
+.upload-hint{font-size:.8rem;color:#666}
+#fileInput{display:none}
+.toast{position:fixed;top:15px;right:15px;background:rgba(233,69,96,.95);color:#fff;padding:10px 20px;border-radius:10px;font-size:.9rem;display:none;z-index:9999;box-shadow:0 8px 25px rgba(0,0,0,.5);max-width:350px}
+.toast.show{display:block;animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(80px);opacity:0}to{transform:translateX(0);opacity:1}}
+.btn-sm{padding:6px 14px;border-radius:15px;font-size:.8rem;cursor:pointer;transition:all .3s;border:none}
+.btn-use{background:linear-gradient(135deg,#e94560,#0f3460);color:#fff}
+.btn-use:hover{box-shadow:0 4px 12px rgba(233,69,96,.4)}
+.btn-del{background:transparent;color:#ff4444;border:1px solid #ff4444}
+.btn-del:hover{background:#ff4444;color:#fff}
+.custom-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.05);padding:10px 15px;border-radius:10px;margin-bottom:8px}
+.custom-info{display:flex;align-items:center;gap:10px}
+.custom-thumb{width:45px;height:45px;border-radius:8px;object-fit:cover;background:rgba(255,255,255,.1)}
+.preview-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:999;display:none;align-items:center;justify-content:center}
+.preview-modal.show{display:flex}
+.preview-content{background:#1a1a2e;border-radius:20px;padding:30px;max-width:500px;width:90%;text-align:center;position:relative}
+.preview-canvas-wrap{width:100%;height:400px;margin:20px 0}
+.preview-canvas-wrap canvas{max-width:100%;max-height:100%}
+.preview-close{position:absolute;top:10px;right:15px;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer}
+.preview-title{color:#fff;font-size:1.3rem;margin-bottom:5px}
+.preview-desc{color:#999;font-size:.9rem}
+.preview-btn{margin-top:15px;background:linear-gradient(135deg,#e94560,#0f3460);color:#fff;border:none;padding:12px 30px;border-radius:25px;font-size:1rem;cursor:pointer}
+.loading-spinner{display:inline-block;width:30px;height:30px;border:3px solid rgba(233,69,96,.3);border-top-color:#e94560;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🎭 数字人形象管理</h1>
+    <div class="nav-btns">
+        <a href="/settings.html" class="nav-btn">⚙️ 设置</a>
+        <a href="/" class="nav-btn">← 主页</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="section-title">📦 Live2D 模型库</div>
+    <div class="model-grid" id="modelGrid"></div>
+
+    <div class="section-title">📤 自定义静态头像</div>
+    <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">拖拽或点击上传 PNG/JPG/GIF 图片</div>
+        <div class="upload-hint">上传的照片将作为静态头像使用</div>
+        <input type="file" id="fileInput" accept=".png,.jpg,.jpeg,.gif">
+    </div>
+    <div id="customList"></div>
+</div>
+
+<!-- 大图预览弹窗 -->
+<div class="preview-modal" id="previewModal">
+    <div class="preview-content">
+        <button class="preview-close" onclick="closePreview()">✕</button>
+        <div class="preview-title" id="previewTitle"></div>
+        <div class="preview-desc" id="previewDesc"></div>
+        <div class="preview-canvas-wrap" id="previewCanvasWrap"></div>
+        <button class="preview-btn" id="previewUseBtn">使用此形象</button>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Live2D SDK -->
+<script src="/static/js/live2dcubismcore.min.js"></script>
+<script src="/static/js/live2dcubismframework.min.js"></script>
+<script src="/static/chat-api.js"></script>
+<script src="/static/cubism-sdk/Framework/dist/live2dcubismframework.min.js" onerror="console.log('备用SDK也加载失败')"></script>
+
+<script>
+// ============ 全局状态 ============
+let currentModelId = localStorage.getItem('selectedModelId') || 'shizuku';
+let modelList = [];
+let live2dInstances = {};
+let currentExpression = "neutral"; // neutral, happy, thinking, sorry
+let typewriterQueue = []; // 打字机队列
+let isTypewriterRunning = false;
+
+// ============ 提示工具 ============
+// ============ 打字机效果 ============
+function typewriterEffect(element, text, speed = 50) {
+    return new Promise((resolve) => {
+        element.textContent = "";
+        let i = 0;
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                element.textContent += text.charAt(i);
+                i++;
+            } else {
+                clearInterval(timer);
+                resolve();
+            }
+        }, speed);
+    });
+}
+
+// ============ 表情联动控制 ============
+function setExpression(expression) {
+    currentExpression = expression;
+    // 通知Live2D模型切换表情（如果有表情文件）
+    if (live2dInstances[currentModelId]) {
+        try {
+            // 这里使用简单的CSS动画模拟表情变化
+            const container = document.getElementById(`preview-${currentModelId}`);
+            if (container) {
+                container.style.animation = `expression-${expression} 0.5s ease-in-out`;
+            }
+        } catch (e) {
+            console.log("表情切换失败:", e);
+        }
+    }
+}
+
+// ============ AI回复处理 ============
+function handleAIResponse(response) {
+    const chatMessages = document.getElementById("chatMessages");
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message ai-message";
+    
+    const contentDiv = document.createElement("div");
+    contentDiv.className = "message-content";
+    messageDiv.appendChild(contentDiv);
+    
+    chatMessages.appendChild(messageDiv);
+    
+    // 打字机效果显示
+    typewriterEffect(contentDiv, response).then(() => {
+        // 根据回复内容切换表情
+        if (response.includes("开心") || response.includes("高兴") || response.includes("太好了")) {
+            setExpression("happy");
+        } else if (response.includes("思考") || response.includes("想想") || response.includes("嗯...")) {
+            setExpression("thinking");
+        } else if (response.includes("抱歉") || response.includes("对不起") || response.includes("不好意思")) {
+            setExpression("sorry");
+        } else {
+            setExpression("neutral");
+        }
+    });
+}
+function showToast(msg, ms = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ============ 加载模型配置 ============
+async function loadModels() {
+    try {
+        const res = await fetch("/static/live2d/models.json");
+        const data = await res.json();
+        modelList = data.models || [];
+        renderModelGrid();
+        // 默认使用第一个模型（shizuku）
+        if (!currentModelId && modelList.length > 0) {
+            currentModelId = modelList[0].id;
+            selectModel(currentModelId, modelList[0].name);
+        }
+    } catch (e) {
+        console.error("加载模型配置失败:", e);
+        showToast("❌ 加载模型列表失败");
+    }
+}
+
+// ============ 渲染模型卡片 ============
+function renderModelGrid() {
+    const grid = document.getElementById("modelGrid");
+    grid.innerHTML = "";
+    
+    modelList.forEach(model => {
+        const card = document.createElement("div");
+        card.className = `model-card ${model.id === currentModelId ? "active" : ""}`;
+        card.dataset.id = model.id;
+        
+        card.innerHTML = `
+            <div class="model-preview" id="preview-${model.id}">
+                <span class="active-badge">✓ 使用中</span>
+                <span class="emoji-avatar">${model.thumbnail}</span>
+            </div>
+            <div class="model-info">
+                <div class="model-name">${model.name}</div>
+                <div class="model-desc">${model.description}</div>
+                <div class="model-tags">
+                    ${model.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+                </div>
+            </div>
+        `;
+        
+        // 单击选择并懒加载模型
+        card.onclick = (e) => {
+            if (e.target.closest(".preview-close")) return;
+            selectModel(model.id, model.name);
+            // 懒加载当前选择的模型
+            live2dLazyLoader.loadModel(model.id);
+        };
+        
+        // 双击大图预览（懒加载）
+        card.ondblclick = async () => {
+            await live2dLazyLoader.loadModel(model.id);
+            openPreview(model);
+        };
+        
+        grid.appendChild(card);
+    });
+}
+
+// ============ 选择模型 ============
+function selectModel(modelId, modelName) {
+    currentModelId = modelId;
+    const model = modelList.find(m => m.id === modelId);
+    
+    localStorage.setItem("selectedModelId", modelId);
+    localStorage.setItem("selectedModelUrl", model ? model.modelUrl : "");
+    localStorage.setItem("selectedModelType", "live2d");
+    localStorage.setItem("selectedModelName", modelName || modelId);
+    
+    // 更新UI
+    document.querySelectorAll(".model-card").forEach(c => c.classList.remove("active"));
+    const card = document.querySelector(`.model-card[data-id="${modelId}"]`);
+    if (card) card.classList.add("active");
+    
+    // 初始化Live2D实例（如果尚未初始化）
+    if (!live2dInstances[modelId] && model.modelUrl) {
+        initLive2DInstance(model);
+    }
+    
+    // 应用当前表情
+    setExpression(currentExpression);
+    
+    showToast(`✅ 已选择: ${modelName}，返回主页生效`);
+}
+
+// ============ 加载可见的 Live2D 缩略图 ============
+function loadVisibleThumbnails() {
+    // 检查 Live2D SDK 是否可用
+    if (typeof Live2DCubismFramework === "undefined" && typeof LIVE2DCUBISMCORE === "undefined") {
+        console.log("Live2D SDK 未加载，使用 emoji 缩略图");
+        return;
+    }
+    
+    // 只为前3个模型加载缩略图和初始化实例
+    const visibleModels = modelList.slice(0, 3);
+    visibleModels.forEach(model => {
+        loadLive2DThumbnail(model);
+        // 同时初始化Live2D实例用于表情联动
+        if (!live2dInstances[model.id]) {
+            initLive2DInstance(model);
+        }
+    });
+}
+
+// ============ 加载单个 Live2D 缩略图 ============
+// ============ 初始化Live2D实例（用于表情联动） ============
+function initLive2DInstance(model) {
+    if (!model.modelUrl || typeof Live2DCubismFramework === "undefined") return;
+    
+    try {
+        // 创建简单的Live2D渲染器
+        const container = document.getElementById(`preview-${model.id}`);
+        if (!container) return;
+        
+        const canvas = document.createElement("canvas");
+        canvas.width = 200;
+        canvas.height = 240;
+        canvas.id = `live2d-canvas-${model.id}`;
+        canvas.style.cssText = "position: absolute; top: 0; left: 0; opacity: 0.8;";
+        container.appendChild(canvas);
+        
+        // 加载模型配置
+        fetch(model.modelUrl)
+            .then(res => res.json())
+            .then(config => {
+                // 简单的模型加载（仅用于表情联动）
+                const mocUrl = new URL(config.model.moc, window.location.origin + model.modelUrl).pathname;
+                const textureUrl = new URL(config.model.textures[0], window.location.origin + model.modelUrl).pathname;
+                
+                // 创建简单的Live2D实例
+                const app = new PIXI.Application({
+                    width: canvas.width,
+                    height: canvas.height,
+                    view: canvas,
+                    transparent: true,
+                });
+                
+                const model2 = new PIXI.Live2DModel(model.modelUrl);
+                model2.anchor.set(0.5, 0.5);
+                model2.position.set(canvas.width / 2, canvas.height / 2);
+                app.stage.addChild(model2);
+                
+                live2dInstances[model.id] = {
+                    app: app,
+                    model: model2,
+                    canvas: canvas,
+                };
+                
+                console.log(`Live2D实例已初始化: ${model.id}`);
+            })
+            .catch(e => console.log(`Live2D实例初始化失败: ${model.id}`, e));
+    } catch (e) {
+        console.log(`Live2D实例初始化失败: ${model.id}`, e);
+    }
+}
+async function loadLive2DThumbnail(model) {
+    const container = document.getElementById(`preview-${model.id}`);
+    if (!container) return;
+    
+    // 移除 emoji
+    const emoji = container.querySelector('.emoji-avatar');
+    if (emoji) emoji.style.display = 'none';
+    
+    // 创建 canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 240;
+    canvas.style.cssText = 'max-width:100%;max-height:100%';
+    container.appendChild(canvas);
+    
+    try {
+        // 简单加载：用 fetch 获取模型配置
+        const res = await fetch(model.modelUrl);
+        const modelConfig = await res.json();
+        
+        // 获取 moc 文件路径
+        const mocUrl = new URL(modelConfig.model.moc, window.location.origin + model.modelUrl).pathname;
+        const textureUrl = new URL(modelConfig.model.textures[0], window.location.origin + model.modelUrl).pathname;
+        
+        // 在 canvas 上绘制纹理作为预览
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 居中裁剪绘制
+            const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            const x = (canvas.width - w) / 2;
+            const y = (canvas.height - h) / 2;
+            
+            ctx.drawImage(img, x, y, w, h);
+        };
+        img.onerror = () => {
+            // 纹理加载失败，恢复 emoji
+            canvas.remove();
+            if (emoji) emoji.style.display = '';
+        };
+        img.src = textureUrl;
+        
+    } catch (e) {
+        console.log(`缩略图加载失败 ${model.id}:`, e);
+        canvas.remove();
+        if (emoji) emoji.style.display = '';
+    }
+}
+
+// ============ 大图预览 ============
+function openPreview(model) {
+    const modal = document.getElementById('previewModal');
+    document.getElementById('previewTitle').textContent = model.name;
+    document.getElementById('previewDesc').textContent = model.description;
+    
+    const wrap = document.getElementById('previewCanvasWrap');
+    wrap.innerHTML = `<canvas id="previewCanvas" width="400" height="400"></canvas>
+                      <div style="text-align:center;padding:20px"><div class="loading-spinner"></div><br>加载中...</div>`;
+    
+    document.getElementById('previewUseBtn').onclick = () => {
+        selectModel(model.id, model.name);
+        closePreview();
+    };
+    
+    modal.classList.add('show');
+    
+    // 尝试加载纹理预览
+    loadPreviewTexture(model);
+}
+
+async function loadPreviewTexture(model) {
+    const canvas = document.getElementById('previewCanvas');
+    if (!canvas) return;
+    
+    try {
+        const res = await fetch(model.modelUrl);
+        const config = await res.json();
+        const texturePath = config.model.textures[0];
+        const textureUrl = new URL(texturePath, window.location.origin + model.modelUrl).pathname;
+        
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 400, 400);
+            
+            const scale = Math.min(400 / img.width, 400 / img.height) * 0.9;
+            const w = img.width * scale;
+            const h = img.height * scale;
+            
+            ctx.drawImage(img, (400 - w) / 2, (400 - h) / 2, w, h);
+            
+            // 隐藏加载提示
+            const loading = document.querySelector('#previewCanvasWrap .loading-spinner');
+            if (loading) loading.parentElement.remove();
+        };
+        img.src = textureUrl;
+    } catch (e) {
+        console.log('预览加载失败:', e);
+    }
+}
+
+function closePreview() {
+    document.getElementById('previewModal').classList.remove('show');
+}
+
+// ============ 自定义头像 ============
+async function loadCustomAvatars() {
+    try {
+        const res = await fetch('/api/admin/avatars');
+        const avatars = await res.json();
+        const list = document.getElementById('customList');
+        list.innerHTML = '';
+        
+        avatars.filter(a => a.id !== 'default').forEach(avatar => {
+            const item = document.createElement('div');
+            item.className = 'custom-item';
+            item.innerHTML = `
+                <div class="custom-info">
+                    <img src="${avatar.url}" class="custom-thumb" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎭</text></svg>'">
+                    <div>
+                        <div style="font-weight:600;font-size:.9rem">${avatar.name}</div>
+                        <div style="font-size:.75rem;color:#666">${avatar.type}</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px">
+                    <button class="btn-sm btn-use" onclick="useAvatar('${avatar.url}','${avatar.name}')">使用</button>
+                    <button class="btn-sm btn-del" onclick="deleteAvatar('${avatar.id}')">删除</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    } catch (e) {
+        console.error('加载自定义头像失败:', e);
+    }
+}
+
+function useAvatar(url, name) {
+    localStorage.setItem('selectedModelId', 'custom');
+    localStorage.setItem('selectedModelUrl', url);
+    localStorage.setItem('selectedModelType', 'image');
+    localStorage.setItem('selectedModelName', name);
+    
+    document.querySelectorAll('.model-card').forEach(c => c.classList.remove('active'));
+    showToast(`✅ 已选择: ${name}`);
+}
+
+async function deleteAvatar(id) {
+    if (!confirm('确定删除？')) return;
+    await fetch(`/api/admin/avatars/${id}`, { method: 'DELETE' });
+    showToast('🗑️ 已删除');
+    loadCustomAvatars();
+}
+
+// ============ 上传 ============
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.onclick = () => fileInput.click();
+uploadZone.ondragover = e => { e.preventDefault(); uploadZone.classList.add('dragover'); };
+uploadZone.ondragleave = () => uploadZone.classList.remove('dragover');
+uploadZone.ondrop = e => { e.preventDefault(); uploadZone.classList.remove('dragover'); handleUpload(e.dataTransfer.files); };
+fileInput.onchange = () => handleUpload(fileInput.files);
+
+// ============ 聊天界面控制 ============
+function toggleChat() {
+    const chatInterface = document.getElementById("chatInterface");
+    chatInterface.style.display = chatInterface.style.display === "none" ? "block" : "none";
+}
+
+// ============ 发送消息 ============
+function sendMessage() {
+    const input = document.getElementById("chatInput");
+    const message = input.value.trim();
+    if (!message) return;
+    
+    const chatMessages = document.getElementById("chatMessages");
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message user-message";
+    messageDiv.innerHTML = `<div class="message-content">${message}</div>`;
+    chatMessages.appendChild(messageDiv);
+    
+    input.value = "";
+    
+    // 模拟AI回复（实际项目中替换为真实API调用）
+    setTimeout(() => {
+        const responses = {
+            "你好": "你好！很高兴见到你！😊",
+            "你好吗": "我很好，谢谢！你呢？",
+            "今天天气": "今天天气真不错，适合出游！☀️",
+            "推荐景点": "我推荐你去参观故宫，非常值得一去！🏯",
+            "谢谢": "不客气！有需要随时找我。😊",
+        };
+        
+        const aiResponse = responses[message] || "我理解你的问题，让我想想... 🤔";
+        handleAIResponse(aiResponse);
+    }, 1000);
+}
+async function handleUpload(files) {
+    for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+            const res = await fetch('/api/admin/upload-avatar', { method: 'POST', body: fd });
+            const data = await res.json();
+            showToast(data.url ? `✅ ${file.name} 上传成功` : `❌ ${data.error}`);
+        } catch (e) {
+            showToast(`❌ 上传失败`);
+        }
+    }
+    loadCustomAvatars();
+}
+
+// ============ 初始化 ============
+// ============ 添加浮动聊天按钮 ============
+const chatButton = document.createElement("div");
+chatButton.innerHTML = "💬";
+chatButton.style.cssText = "position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); z-index: 999;";
+chatButton.onclick = toggleChat;
+document.body.appendChild(chatButton);
+window.onload = () => {
+    loadModels();
+    loadCustomAvatars();
+};
+
+// ESC 关闭预览
+document.onkeydown = e => { if (e.key === 'Escape') closePreview(); };
+</script>
+</body>
+</html>

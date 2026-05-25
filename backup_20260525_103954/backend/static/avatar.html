@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Live2D Avatar (Pixi + Cubism2)</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    canvas { display: block; width: 300px; height: 400px; }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism2.min.js"></script>
+
+  <script>
+    let currentVolume = 0;
+    let smoothedVolume = 0;
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'lipSync') {
+        currentVolume = event.data.volume;
+      }
+    });
+
+    (async function () {
+      const app = new PIXI.Application({
+        width: 300, height: 400, transparent: true, autoDensity: true, resolution: window.devicePixelRatio || 2,
+      });
+      document.body.appendChild(app.view);
+      window.PIXI = PIXI;
+
+      try {
+        const model = await PIXI.live2d.Live2DModel.from('https://unpkg.com/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json');
+        app.stage.addChild(model);
+
+        model.anchor.set(0.5, 0.5);
+        model.x = app.screen.width / 2;
+        model.y = app.screen.height / 2;
+        const scale = Math.min(app.screen.width / model.width, app.screen.height / model.height);
+        model.scale.set(scale * 0.9);
+
+        console.log('✅ Live2D 模型加载成功！');
+
+        const coreModel = model.internalModel.coreModel;
+        const originalCoreUpdate = coreModel.update.bind(coreModel);
+        
+        coreModel.update = function() {
+            // 1. 强制截断底噪：TTS没声音时也会有一点点0.01的电流音，直接砍掉
+            let targetVolume = currentVolume < 0.02 ? 0 : currentVolume;
+            
+            // 2. 非线性放大：让小音量敏感，大音量不至于爆表
+            targetVolume = Math.min(1, Math.pow(targetVolume * 12, 1.2));
+
+            // 3. 核心拟真逻辑：张嘴用插值（快），闭嘴用恒速衰减（干脆！）
+            if (targetVolume > smoothedVolume) {
+                // 张嘴：快速跟随音量 (0.5)
+                smoothedVolume += (targetVolume - smoothedVolume) * 0.5;
+            } else {
+                // 闭嘴：每帧固定减少 0.1 (恒速收嘴，拒绝黏糊！)
+                // 这个值越大闭嘴越快，0.1 是一个比较自然的发音收尾速度
+                smoothedVolume = Math.max(targetVolume, smoothedVolume - 0.1);
+            }
+
+            this.setParamFloat("PARAM_MOUTH_OPEN_Y", smoothedVolume);
+            originalCoreUpdate();
+        };
+
+      } catch (e) {
+        console.error('❌ 模型加载失败:', e);
+      }
+    })();
+  </script>
+</body>
+</html>

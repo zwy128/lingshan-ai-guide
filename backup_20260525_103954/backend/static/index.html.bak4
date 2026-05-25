@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵山胜境 · AI导游小灵</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,#1a0533,#0d1b3e);height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden}
+.stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.star{position:absolute;background:white;border-radius:50%;animation:twinkle 2s infinite alternate}
+@keyframes twinkle{from{opacity:.3}to{opacity:1}}
+.app{width:1000px;height:680px;display:flex!important;margin:0 auto;background:rgba(255,255,255,.96);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5);z-index:1}
+.human-panel{width:400px;background:linear-gradient(180deg,#667eea,#764ba2);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.avatar-area{position:relative;z-index:2;text-align:center;width:380px;min-height:480px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.name-display{color:white;font-size:20px;font-weight:bold;margin-top:8px;text-align:center}
+.name-display .role{font-size:11px;opacity:.8;display:block}
+.chat-panel{flex:1;display:flex;flex-direction:column;background:#fafbfc}
+.chat-header{position:relative;padding:16px;text-align:center;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:17px;font-weight:bold}
+.chat-header .sub{font-size:10px;opacity:.8;margin-top:2px}
+.btn-clear{position:absolute;right:12px;top:14px;background:rgba(255,255,255,.2);border:none;color:white;padding:4px 12px;border-radius:10px;cursor:pointer;font-size:11px}
+.trending-bar{padding:8px 12px;background:#f0f4ff;border-bottom:1px solid #d0d5fa;overflow-x:auto;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.trending-item{display:inline-block;background:#eef2ff;color:#333;font-size:12px;padding:4px 12px;border-radius:14px;cursor:pointer;border:1px solid #d0d5fa;flex-shrink:0;transition:.2s}
+.trending-item:hover{background:#667eea;color:white;border-color:#667eea}
+.messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:8px;background:#f5f7fa}
+.msg{max-width:80%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;animation:in .3s}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;background:linear-gradient(135deg,#667eea,#764ba2);color:white}
+.msg.bot{align-self:flex-start;background:white;color:#333;border:1px solid#e8e8e8;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.input-area{display:flex;gap:10px;padding:12px 15px;background:white;border-top:1px solid#eee;align-items:center}
+.input-area input{flex:1;padding:11px 16px;border-radius:22px;border:1.5px solid#e0e0e0;font-size:14px;outline:none;background:#f8f9fb}
+.input-area input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.btn-voice{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;padding:0;background:#f0f0f5}
+.btn-voice svg{width:20px;height:20px;fill:#555}
+.btn-voice.recording{background:#ff4757}
+.btn-voice.recording svg{fill:white}
+.btn-send{width:42px;height:42px;border-radius:50%;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:white;font-size:18px;cursor:pointer;font-weight:bold;display:flex;align-items:center;justify-content:center}
+.btn-send:hover{transform:scale(1.1);box-shadow:0 4px 15px rgba(102,126,234,.4)}
+.voice-text{font-size:11px;color:#999;padding:2px 15px;text-align:center;min-height:16px}
+#feedbackBar{display:none;padding:8px 15px;background:#f0f4ff;border-top:1px solid #d0d5fa;text-align:center;font-size:14px}
+.avatar-selector{position:relative;display:inline-block}
+.avatar-list{display:none;position:absolute;top:35px;left:50%;transform:translateX(-50%);background:rgba(30,30,40,0.95);border-radius:8px;padding:8px;min-width:120px;z-index:20;text-align:left}
+.avatar-list div{padding:6px 10px;cursor:pointer;color:white;border-bottom:1px solid #333}
+.avatar-list div:hover{background:rgba(102,126,234,0.4)}
+.typing-indicator{display:flex;align-items:center;gap:5px;padding:10px 14px;background:white;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);max-width:80%;align-self:flex-start;animation:in .3s}
+.typing-indicator .dot{width:8px;height:8px;border-radius:50%;background:#667eea;animation:typingBounce 1.4s infinite ease-in-out}
+.typing-indicator .dot:nth-child(1){animation-delay:0s}
+.typing-indicator .dot:nth-child(2){animation-delay:.2s}
+.typing-indicator .dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-8px);opacity:1}}
+.thinking-text{font-size:13px;color:#999;margin-left:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/dylanNew/live2d/webgl/Live2D/lib/live2d.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism2.min.js"></script>
+</head>
+<body>
+
+<!-- 右上角按钮：区分语音设置和数字人 -->
+<div style="position:fixed;top:15px;right:15px;z-index:1000;display:flex;gap:8px;">
+    <a href="/settings.html" style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:8px 18px;border-radius:20px;text-decoration:none;font-size:.85rem;box-shadow:0 3px 10px rgba(102,126,234,.3);">⚙️ 语音设置</a>
+    <a href="/avatar-manage.html" style="background:linear-gradient(135deg,#e94560,#c23152);color:white;padding:8px 18px;border-radius:20px;text-decoration:none;font-size:.85rem;box-shadow:0 3px 10px rgba(233,69,96,.3);">🎭 数字人</a>
+</div>
+
+<!-- 全屏启动选择界面 -->
+<div id="startScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1a0533 0%,#2d1b4e 50%,#0d1b3e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;color:white;text-align:center;font-family:'Microsoft YaHei',sans-serif">
+    <h1 style="font-size:2.5em;margin-bottom:10px;font-weight:300;letter-spacing:4px;">灵山胜境</h1>
+    <p style="font-size:1.1em;opacity:0.7;margin-bottom:60px;">—— 选择您的AI导游 ——</p>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;justify-content:center;max-width:900px;width:90%">
+        <div onclick="useDefault()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
+            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><circle cx="12" cy="12" r="12" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="9" r="3" fill="white"/><path d="M6 20c0-2.76 2.24-5 6-5s6 2.24 6 5" fill="white"/></svg>
+            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">默认导游小灵</div>
+            <div style="font-size:0.85em;opacity:0.7;">可爱的AI动画形象</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;position:relative;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
+            <label for="avatarFile" style="display:block;cursor:pointer;position:absolute;top:0;left:0;width:100%;height:100%;"></label>
+            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="uploadAndEnter(this)">
+            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h4.05l1.83-2h4.24l1.83 2H20v12z"/><circle cx="12" cy="11" r="3"/></svg>
+            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">导入本地形象</div>
+            <div style="font-size:0.85em;opacity:0.7;">从电脑选择图片</div>
+        </div>
+        <div onclick="startWithLive2DFromChoice()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
+            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><rect x="4" y="4" width="16" height="16" rx="4" fill="rgba(255,255,255,0.2)"/><circle cx="12" cy="10" r="3" fill="white"/><path d="M8 16c0-1.66 1.79-3 4-3s4 1.34 4 3" fill="white"/></svg>
+            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">数字人导游</div>
+            <div style="font-size:0.85em;opacity:0.7;">Live2D 口型同步</div>
+        </div>
+        <div onclick="quickStart()" style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:20px;padding:40px 30px;width:220px;cursor:pointer;transition:0.3s;border:2px solid transparent;" onmouseover="this.style.background='rgba(255,255,255,0.2)';this.style.borderColor='#FFD700';this.style.transform='translateY(-5px)'" onmouseout="this.style.background='rgba(255,255,255,0.1)';this.style.borderColor='transparent';this.style.transform='translateY(0)'">
+            <svg width="70" height="70" viewBox="0 0 24 24" fill="white" style="margin-bottom:20px"><path d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66.19-.34.05-.08.07-.12C8.48 10.94 10.42 7.54 13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15C12.96 17.55 11 21 11 21z"/></svg>
+            <div style="font-size:1.3em;font-weight:bold;margin-bottom:10px;">快速进入</div>
+            <div style="font-size:0.85em;opacity:0.7;">直接开始对话</div>
+        </div>
+    </div>
+</div>
+
+<div class="stars" id="stars"></div>
+
+<!-- 主应用界面 -->
+<div class="app" id="mainApp" style="display:none">
+    <div class="human-panel">
+        <div class="avatar-area" id="avatarContainer">
+            <svg id="avatarSvg" width="220" height="310" viewBox="0 0 220 320">
+                <defs><radialGradient id="gg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.2"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></radialGradient></defs>
+                <circle cx="110" cy="120" r="100" fill="url(#gg)"/>
+                <g id="bodyGroup"><rect x="65" y="195" width="90" height="80" rx="20" fill="#667eea"/><ellipse cx="110" cy="270" rx="55" ry="45" fill="#667eea"/><path d="M110 190 L100 210 L110 235 L120 210 Z" fill="#FFD700"/><rect x="80" y="222" width="60" height="16" rx="4" fill="#FFD700"/><text x="110" y="234" text-anchor="middle" font-size="8" fill="#4a3728" font-weight="bold">导游·小灵</text></g>
+                <g id="leftHand"><circle cx="52" cy="230" r="18" fill="#FFE4C4"/></g>
+                <g id="rightHand"><circle cx="168" cy="230" r="18" fill="#FFE4C4"/></g>
+                <g id="headGroup">
+                    <circle cx="110" cy="110" r="72" fill="#FFE4C4"/><ellipse cx="110" cy="55" rx="82" ry="48" fill="#4a3728"/>
+                    <path d="M38 60 Q52 98 72 78 Q88 108 100 72 Q115 102 130 78 Q148 98 182 60 Q170 28 110 22 Q50 28 38 60Z" fill="#4a3728"/>
+                    <path id="ahoge" d="M110 22 Q115 -8 132 -12" stroke="#4a3728" stroke-width="3" fill="none" stroke-linecap="round"/>
+                    <ellipse id="lBrow" cx="82" cy="88" rx="13" ry="4" fill="#5a4030"/><ellipse id="rBrow" cx="138" cy="88" rx="13" ry="4" fill="#5a4030"/>
+                    <ellipse cx="83" cy="104" rx="15" ry="18" fill="white"/><circle id="lPupil" cx="86" cy="105" r="9" fill="#1a1a2e"/><circle cx="90" cy="99" r="4.5" fill="white"/><circle cx="82" cy="109" r="2" fill="white"/>
+                    <ellipse cx="137" cy="104" rx="15" ry="18" fill="white"/><circle id="rPupil" cx="140" cy="105" r="9" fill="#1a1a2e"/><circle cx="144" cy="99" r="4.5" fill="white"/><circle cx="136" cy="109" r="2" fill="white"/>
+                    <ellipse cx="110" cy="125" rx="6" ry="5" fill="#F0C8A0"/>
+                    <path id="svgMouth" d="M100 142 Q110 150 120 142" stroke="#d4786a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/>
+                    <ellipse id="lBlush" cx="65" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/><ellipse id="rBlush" cx="155" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/>
+                    <path d="M58 88 Q40 93 42 118 Q44 142 58 148" stroke="#333" stroke-width="3" fill="none"/><rect x="37" y="98" width="7" height="18" rx="3" fill="#333"/><circle cx="40" cy="90" r="3" fill="#00ff88"/>
+                </g>
+            </svg>
+            <div class="name-display"><span style="color:#00ff88">●</span> <span id="guideNameText">小灵</span><div class="role">AI 智慧导游</div></div>
+        </div>
+        <div class="avatar-selector" style="margin-top:10px;">
+            <button id="changeAvatarBtn" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:4px 12px;border-radius:12px;cursor:pointer;font-size:12px;">更换形象</button>
+            <div id="avatarList" class="avatar-list"></div>
+        </div>
+    </div>
+    <div class="chat-panel">
+        <div class="chat-header">灵 山 胜 境<div class="sub">—— 千年佛国 · 智慧之旅 ——</div><button class="btn-clear" onclick="clearChat()">新对话</button></div>
+        <div class="trending-bar" id="trendingBar"><span style="font-size:12px;color:#667eea;font-weight:bold;">热门问题</span></div>
+        <div class="messages" id="messages"><div class="msg bot">嗨！我是小灵，你的专属AI导游~<br>灵山胜境的故事，让我讲给你听！</div></div>
+        <div class="voice-text" id="voiceText"></div>
+        <div id="feedbackBar"><span>本次导游服务怎么样？</span><button onclick="sendFeedback('good')" style="background:#4caf50;color:white;border:none;padding:5px 15px;border-radius:15px;cursor:pointer;margin:0 5px;">满意</button><button onclick="sendFeedback('neutral')" style="background:#ff9800;color:white;border:none;padding:5px 15px;border-radius:15px;cursor:pointer;margin:0 5px;">一般</button><button onclick="sendFeedback('bad')" style="background:#f44336;color:white;border:none;padding:5px 15px;border-radius:15px;cursor:pointer;margin:0 5px;">不满意</button></div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="问我任何问题，或按住右侧麦克风说话" onkeypress="if(event.key=='Enter')sendText()">
+            <button class="btn-voice" id="voiceBtn" title="按住说话"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg></button>
+            <button class="btn-send" onclick="sendText()" title="发送"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+        </div>
+    </div>
+</div>
+
+<script>
+// =============================================
+// 全局变量
+// =============================================
+let headGroup,lPupil,rPupil,lBlush,rBlush,svgMouth,rightHand,ahoge;
+let mouthTimer,currentAudio=null,currentAvatarType='svg';
+let live2dApp=null,live2dModel=null;
+window.isLive2DActive=false;
+
+// ====== 每个模型对应的默认声音 ======
+const MODEL_VOICE_MAP={
+    'haru':    {voice:'zh-CN-XiaoxiaoNeural',name:'晓晓',gender:'女'},
+    'shizuku': {voice:'zh-CN-XiaoyiNeural',  name:'晓依',gender:'女'},
+    'hijiki':  {voice:'zh-CN-YunxiNeural',   name:'云希',gender:'男'},
+    'tororo':  {voice:'zh-CN-YunjianNeural', name:'云健',gender:'男'},
+    'koharu':  {voice:'zh-CN-XiaomoNeural',  name:'晓墨',gender:'女'},
+    'haruto':  {voice:'zh-CN-YunyangNeural', name:'云扬',gender:'男'},
+    'miku':    {voice:'zh-CN-XiaoxuanNeural',name:'晓萱',gender:'女'},
+    'default': {voice:'zh-CN-XiaoxiaoNeural',name:'晓晓',gender:'女'},
+    'custom':  {voice:'zh-CN-XiaoxiaoNeural',name:'晓晓',gender:'女'},
+};
+
+// SVG模板（恢复默认用）
+const SVG_TEMPLATE='<svg id="avatarSvg" width="220" height="310" viewBox="0 0 220 320"><defs><radialGradient id="gg" cx="50%" cy="40%"><stop offset="0%" stop-color="#ffd700" stop-opacity="0.2"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></radialGradient></defs><circle cx="110" cy="120" r="100" fill="url(#gg)"/><g id="bodyGroup"><rect x="65" y="195" width="90" height="80" rx="20" fill="#667eea"/><ellipse cx="110" cy="270" rx="55" ry="45" fill="#667eea"/><path d="M110 190 L100 210 L110 235 L120 210 Z" fill="#FFD700"/><rect x="80" y="222" width="60" height="16" rx="4" fill="#FFD700"/><text x="110" y="234" text-anchor="middle" font-size="8" fill="#4a3728" font-weight="bold">导游·小灵</text></g><g id="leftHand"><circle cx="52" cy="230" r="18" fill="#FFE4C4"/></g><g id="rightHand"><circle cx="168" cy="230" r="18" fill="#FFE4C4"/></g><g id="headGroup"><circle cx="110" cy="110" r="72" fill="#FFE4C4"/><ellipse cx="110" cy="55" rx="82" ry="48" fill="#4a3728"/><path d="M38 60 Q52 98 72 78 Q88 108 100 72 Q115 102 130 78 Q148 98 182 60 Q170 28 110 22 Q50 28 38 60Z" fill="#4a3728"/><path id="ahoge" d="M110 22 Q115 -8 132 -12" stroke="#4a3728" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse id="lBrow" cx="82" cy="88" rx="13" ry="4" fill="#5a4030"/><ellipse id="rBrow" cx="138" cy="88" rx="13" ry="4" fill="#5a4030"/><ellipse cx="83" cy="104" rx="15" ry="18" fill="white"/><circle id="lPupil" cx="86" cy="105" r="9" fill="#1a1a2e"/><circle cx="90" cy="99" r="4.5" fill="white"/><circle cx="82" cy="109" r="2" fill="white"/><ellipse cx="137" cy="104" rx="15" ry="18" fill="white"/><circle id="rPupil" cx="140" cy="105" r="9" fill="#1a1a2e"/><circle cx="144" cy="99" r="4.5" fill="white"/><circle cx="136" cy="109" r="2" fill="white"/><ellipse cx="110" cy="125" rx="6" ry="5" fill="#F0C8A0"/><path id="svgMouth" d="M100 142 Q110 150 120 142" stroke="#d4786a" stroke-width="2.5" fill="#e8908a" stroke-linecap="round"/><ellipse id="lBlush" cx="65" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/><ellipse id="rBlush" cx="155" cy="118" rx="13" ry="7" fill="#FFB0B0" opacity=".3"/><path d="M58 88 Q40 93 42 118 Q44 142 58 148" stroke="#333" stroke-width="3" fill="none"/><rect x="37" y="98" width="7" height="18" rx="3" fill="#333"/><circle cx="40" cy="90" r="3" fill="#00ff88"/></g></svg>';
+
+// 背景星星
+for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.width=s.style.height=(1+Math.random()*3)+'px';s.style.animationDelay=Math.random()*2+'s';document.getElementById('stars').appendChild(s)}
+
+// =============================================
+// 启动界面
+// =============================================
+function showMainApp(){var s=document.getElementById('startScreen');var m=document.getElementById('mainApp');if(s)s.style.display='none';if(m){m.style.display='flex';m.style.visibility='visible'}}
+function quickStart(){showMainApp()}
+
+function useDefault(){
+    restoreSVG();
+    localStorage.setItem('selectedModelId','default');
+    localStorage.setItem('selectedModelType','svg');
+    localStorage.setItem('selectedModelName','小灵');
+    localStorage.setItem('selectedModelVoice','zh-CN-XiaoxiaoNeural');
+    showMainApp();
+}
+
+function uploadAndEnter(input){
+    var file=input.files[0];if(!file)return;
+    var form=new FormData();form.append('file',file);
+    fetch('/api/admin/upload-avatar',{method:'POST',body:form})
+    .then(function(r){return r.json()})
+    .then(function(data){if(data.url){showImageAvatar(data.url,file.name.replace(/\.\w+$/,''));showMainApp()}else{alert('上传失败')}})
+    .catch(function(){alert('网络错误')});
+}
+
+// ====== 核心：读取用户选择的模型 ======
+function startWithLive2DFromChoice(){
+    var savedType=localStorage.getItem('selectedModelType');
+    var savedUrl=localStorage.getItem('selectedModelUrl');
+    var savedName=localStorage.getItem('selectedModelName');
+    var savedId=localStorage.getItem('selectedModelId');
+    if(savedType==='image'&&savedUrl){
+        showImageAvatar(savedUrl,savedName||'自定义');
+        showMainApp();
+    }else if(savedUrl){
+        loadLive2DModel(savedUrl,savedName||'数字人',savedId||'shizuku');
+        showMainApp();
+    }else{
+        loadLive2DModel('/static/live2d/node_modules/live2d-widget-model-shizuku/assets/shizuku.model.json','雫','shizuku');
+        showMainApp();
+    }
+}
+
+// =============================================
+// SVG动画
+// =============================================
+function cacheSVGElements(){headGroup=document.getElementById('headGroup');lPupil=document.getElementById('lPupil');rPupil=document.getElementById('rPupil');lBlush=document.getElementById('lBlush');rBlush=document.getElementById('rBlush');svgMouth=document.getElementById('svgMouth');rightHand=document.getElementById('rightHand');ahoge=document.getElementById('ahoge')}
+
+function restoreSVG(){
+    var c=document.getElementById('avatarContainer');if(!c)return;
+    c.innerHTML=SVG_TEMPLATE+'<div class="name-display"><span style="color:#00ff88">●</span> <span id="guideNameText">小灵</span><div class="role">AI 智慧导游</div></div>';
+    currentAvatarType='svg';window.isLive2DActive=false;
+    setTimeout(cacheSVGElements,50);
+}
+
+function startSpeak(){if(currentAvatarType!=='svg'||!svgMouth)return;let o=true;mouthTimer=setInterval(()=>{if(svgMouth)svgMouth.setAttribute('d',o?'M97 140 Q110 154 123 140':'M100 142 Q110 148 120 142');o=!o},120)}
+function stopSpeak(){clearInterval(mouthTimer);if(svgMouth)svgMouth.setAttribute('d','M100 142 Q110 150 120 142')}
+function tilt(d){if(headGroup){headGroup.style.transform='rotate('+d+'deg)';headGroup.style.transformOrigin='110px 110px'}}
+function resetHead(){if(headGroup)headGroup.style.transform='rotate(0deg)'}
+function look(d){const o=d==='l'?-4:4;if(lPupil)lPupil.setAttribute('cx',86+o);if(rPupil)rPupil.setAttribute('cx',140+o)}
+function resetEyes(){if(lPupil)lPupil.setAttribute('cx',86);if(rPupil)rPupil.setAttribute('cx',140)}
+function happy(){if(lBlush)lBlush.setAttribute('opacity','.6');if(rBlush)rBlush.setAttribute('opacity','.6');setTimeout(()=>{if(lBlush)lBlush.setAttribute('opacity','.3');if(rBlush)rBlush.setAttribute('opacity','.3')},1500)}
+function wave(){let p=0;const t=setInterval(()=>{if(rightHand){rightHand.style.transform='rotate('+(p%2?-20:10)+'deg)';rightHand.style.transformOrigin='168px 230px'}p++;if(p>6){clearInterval(t);if(rightHand)rightHand.style.transform='rotate(0deg)'}},200)}
+function speakAnim(){startSpeak();tilt(-3);look('l');setTimeout(()=>{tilt(3);look('r')},800);setTimeout(()=>{tilt(-2);look('l')},1600);setTimeout(()=>{resetHead();resetEyes()},2400)}
+function stopAll(){if(currentAudio){currentAudio.pause();currentAudio=null}stopSpeak();resetHead();resetEyes();document.getElementById('voiceText').textContent=''}
+
+// =============================================
+// 图片头像
+// =============================================
+function showImageAvatar(url,name){
+    var c=document.getElementById('avatarContainer');if(!c)return;
+    c.innerHTML='<img src="'+url+'" style="max-width:220px;max-height:380px;border-radius:20px;box-shadow:0 4px 15px rgba(0,0,0,.3);"/><div class="name-display"><span style="color:#00ff88">●</span> <span id="guideNameText">'+(name||'导游')+'</span><div class="role">AI 智慧导游</div></div>';
+    currentAvatarType='image';window.isLive2DActive=false;headGroup=null;svgMouth=null;
+}
+
+// =============================================
+// Live2D 模型加载（支持任意模型 + 声音联动）
+// =============================================
+async function loadLive2DModel(modelUrl,modelName,modelId){
+    window.isLive2DActive=true;
+    var container=document.getElementById('avatarContainer');if(!container)return;
+    if(live2dApp){try{live2dApp.destroy(true)}catch(e){}live2dApp=null}
+    live2dModel=null;
+    container.innerHTML='<div style="color:white;text-align:center;padding-top:120px"><div style="width:30px;height:30px;border:3px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px"></div>加载模型中...</div>';
+    try{
+        if(typeof PIXI==='undefined'||!PIXI.live2d||!PIXI.live2d.Live2DModel)throw new Error('Live2D 库未加载，请刷新');
+        live2dApp=new PIXI.Application({width:container.clientWidth||380,height:400,transparent:true,autoDensity:true,resolution:window.devicePixelRatio||2});
+        container.innerHTML='';
+        container.appendChild(live2dApp.view);
+        var nameDiv=document.createElement('div');nameDiv.className='name-display';
+        nameDiv.innerHTML='<span style="color:#00ff88">●</span> <span id="guideNameText">'+(modelName||'数字人')+'</span><div class="role">AI 智慧导游</div>';
+        container.appendChild(nameDiv);
+        var model=await PIXI.live2d.Live2DModel.from(modelUrl);
+        live2dApp.stage.addChild(model);live2dModel=model;
+        model.anchor.set(0.5,0.5);model.x=live2dApp.screen.width/2;model.y=live2dApp.screen.height/2;
+        var sc=Math.min(live2dApp.screen.width/model.width,live2dApp.screen.height/model.height);
+        model.scale.set(sc*0.85);
+        try{
+            var coreModel=model.internalModel.coreModel;
+            var origUpdate=coreModel.update.bind(coreModel);
+            coreModel.update=function(){var tv=window.currentVolume<0.02?0:window.currentVolume;tv=Math.min(1,Math.pow(tv*12,1.2));if(tv>window.smoothedVolume)window.smoothedVolume+=(tv-window.smoothedVolume)*0.5;else window.smoothedVolume=Math.max(tv,window.smoothedVolume-0.1);try{this.setParamFloat("PARAM_MOUTH_OPEN_Y",window.smoothedVolume)}catch(e){}origUpdate()};
+        }catch(e){console.log('口型同步跳过:',e)}
+        // 根据模型自动切换声音
+        var voiceInfo=MODEL_VOICE_MAP[modelId]||MODEL_VOICE_MAP['default'];
+        localStorage.setItem('selectedModelVoice',voiceInfo.voice);
+        localStorage.setItem('selectedModelId',modelId);
+        console.log('✅ Live2D加载成功:',modelName,'| 声音:',voiceInfo.name,'('+voiceInfo.voice+')');
+    }catch(e){
+        console.error('Live2D加载失败:',e);
+        container.innerHTML='<div style="color:white;padding:40px;text-align:center">模型加载失败<br><small>'+e.message+'</small><br><br><button onclick="restoreSVG()" style="background:#667eea;color:white;border:none;padding:8px 20px;border-radius:15px;cursor:pointer">恢复默认</button></div>';
+        window.isLive2DActive=false;
+    }
+}
+
+// =============================================
+// 思考动画 + 消息
+// =============================================
+function showThinking(){var msgs=document.getElementById('messages');var el=document.createElement('div');el.className='typing-indicator';el.id='thinkingBubble';el.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="thinking-text">思考中...</span>';msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight}
+function hideThinking(){var el=document.getElementById('thinkingBubble');if(el)el.remove()}
+function addMsg(t,u){const d=document.createElement('div');d.className='msg '+(u?'user':'bot');d.textContent=t;document.getElementById('messages').appendChild(d);document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight}
+
+// =============================================
+// 发送文字 — 带声音联动
+// =============================================
+async function sendText(){
+    const i=document.getElementById('userInput'),b=document.querySelector('.btn-send');
+    const t=i.value.trim();if(!t)return;
+    addMsg(t,true);i.value='';b.style.opacity='.5';b.disabled=true;showThinking();
+    try{
+        const currentVoice=localStorage.getItem('selectedModelVoice')||'zh-CN-XiaoxiaoNeural';
+        const r=await fetch('/api/chat/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,voice:currentVoice})});
+        const d=await r.json();hideThinking();addMsg(d.answer,false);showFeedback();
+        if(d.audio_url){
+            document.getElementById('voiceText').textContent='播放中...';
+            stopAll();currentAudio=new Audio(d.audio_url);
+            currentAudio.onplay=()=>{speakAnim();if(ahoge)ahoge.setAttribute('d','M110 22 Q118 -10 135 -14');setTimeout(()=>{if(ahoge)ahoge.setAttribute('d','M110 22 Q115 -8 132 -12')},400)};
+            currentAudio.onended=()=>{stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};
+            currentAudio.play();
+        }else{happy()}
+    }catch(e){hideThinking();addMsg('网络波动，请稍后重试',false)}
+    b.style.opacity='1';b.disabled=false;i.focus();
+}
+
+async function clearChat(){stopAll();try{await fetch('/api/chat/clear',{method:'POST'})}catch(e){}document.getElementById('messages').innerHTML='<div class="msg bot">对话已重置~<br>我是小灵，有什么想问的？</div>'}
+document.addEventListener('keydown',function(e){if(currentAudio){e.preventDefault();stopAll();document.getElementById('voiceText').textContent='已停止朗读'}});
+
+// =============================================
+// 语音录制
+// =============================================
+let mr,chunks=[],recording=false;
+async function startRec(){try{const s=await navigator.mediaDevices.getUserMedia({audio:true});mr=new MediaRecorder(s,{mimeType:'audio/webm'});chunks=[];mr.ondataavailable=e=>chunks.push(e.data);mr.onstop=async()=>{s.getTracks().forEach(t=>t.stop());const f=new FormData();f.append('file',new Blob(chunks,{type:'audio/webm'}),'r.webm');try{const r=await fetch('/api/chat/voice',{method:'POST',body:f});const d=await r.json();document.getElementById('voiceText').textContent='你说：'+d.user_text;hideThinking();addMsg(d.reply_text,false);showFeedback();if(d.audio_url){stopAll();currentAudio=new Audio(d.audio_url);currentAudio.onplay=()=>{speakAnim()};currentAudio.onended=()=>{stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};currentAudio.play()}else{happy()}}catch(e){stopSpeak()}};mr.start();recording=true;document.getElementById('voiceBtn').classList.add('recording');document.getElementById('voiceText').textContent='聆听中...'}catch(e){document.getElementById('voiceText').textContent='请允许麦克风权限'}}
+function stopRec(){if(mr&&recording){mr.stop();recording=false}document.getElementById('voiceBtn').classList.remove('recording');document.getElementById('voiceText').textContent='识别中...'}
+document.getElementById('voiceBtn').addEventListener('mousedown',startRec);
+document.getElementById('voiceBtn').addEventListener('mouseup',stopRec);
+document.getElementById('voiceBtn').addEventListener('mouseleave',()=>{if(recording)stopRec()});
+document.getElementById('voiceBtn').addEventListener('touchstart',e=>{e.preventDefault();startRec()});
+document.getElementById('voiceBtn').addEventListener('touchend',stopRec);
+
+// =============================================
+// 反馈
+// =============================================
+function showFeedback(){document.getElementById('feedbackBar').style.display='block'}
+function hideFeedback(){document.getElementById('feedbackBar').style.display='none'}
+async function sendFeedback(rating){try{await fetch('/api/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating})})}catch(e){}hideFeedback();document.getElementById('voiceText').textContent='感谢您的反馈！';setTimeout(()=>{document.getElementById('voiceText').textContent=''},2000)}
+const origAddMsg=addMsg;addMsg=function(text,isUser){origAddMsg(text,isUser);if(!isUser)showFeedback()};
+
+// =============================================
+// 热门问题
+// =============================================
+async function loadTrending(){try{const res=await fetch('/api/admin/dashboard');const data=await res.json();const bar=document.getElementById('trendingBar');bar.querySelectorAll('.trending-item').forEach(el=>el.remove());if(data.top_questions&&data.top_questions.length>0){data.top_questions.forEach(item=>{const tag=document.createElement('span');tag.className='trending-item';tag.textContent=item.q;tag.onclick=()=>{document.getElementById('userInput').value=item.q;sendText()};bar.appendChild(tag)})}}catch(e){}}
+loadTrending();setInterval(loadTrending,30000);
+
+// =============================================
+// 数字人切换
+// =============================================
+async function loadAvatars(){const list=document.getElementById('avatarList');try{const res=await fetch('/api/admin/avatars');const avatars=await res.json();list.innerHTML='';avatars.forEach(av=>{const item=document.createElement('div');item.textContent=av.name;item.onclick=()=>{if(av.type==='svg'||av.id==='default')restoreSVG();else showImageAvatar(av.url,av.name);list.style.display='none'};list.appendChild(item)})}catch(e){list.innerHTML='<div>加载失败</div>'}}
+document.getElementById('changeAvatarBtn').addEventListener('click',()=>{const list=document.getElementById('avatarList');list.style.display=list.style.display==='none'?'block':'none';loadAvatars()});
+document.addEventListener('click',function(e){const list=document.getElementById('avatarList'),btn=document.getElementById('changeAvatarBtn');if(list&&btn&&!list.contains(e.target)&&e.target!==btn)list.style.display='none'});
+
+// =============================================
+// Audio全局单例 + 音量分析
+// =============================================
+(function(){var _ga=new Audio();_ga.crossOrigin='anonymous';window._globalAudio=_ga;var _origAudio=window.Audio;window.Audio=function(src){if(src)_ga.src=src;_ga.onplay=null;_ga.onended=null;_ga.onerror=null;return _ga};var ctx,anl,inited=false;window.currentVolume=0;window.smoothedVolume=0;function initCtx(){if(inited)return;try{ctx=new(window.AudioContext||window.webkitAudioContext)();anl=ctx.createAnalyser();anl.fftSize=256;var source=ctx.createMediaElementSource(_ga);source.connect(anl);anl.connect(ctx.destination);inited=true}catch(e){console.warn('音频分析初始化失败',e)}}function updVol(){if(_ga.paused){window.currentVolume=0;requestAnimationFrame(updVol);return}if(!anl){requestAnimationFrame(updVol);return}var d=new Uint8Array(anl.frequencyBinCount);anl.getByteTimeDomainData(d);var s=0;for(var i=0;i<d.length;i++){var v=(d[i]-128)/128;s+=v*v}window.currentVolume=Math.sqrt(s/d.length);requestAnimationFrame(updVol)}_ga.addEventListener('play',function(){initCtx();if(ctx&&ctx.state==='suspended')ctx.resume();updVol()});_ga.addEventListener('pause',function(){window.currentVolume=0})})();
+
+// =============================================
+// 初始化
+// =============================================
+cacheSVGElements();
+setTimeout(wave,500);
+</script>
+</body>
+</html>

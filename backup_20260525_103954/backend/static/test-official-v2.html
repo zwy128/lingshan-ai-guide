@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>官方 SDK 测试 Haru</title>
+    <script src="/static/cubism-sdk/Core/live2dcubismcore.min.js"></script>
+    <script src="/static/cubism-sdk/Framework/dist/live2dcubismframework.min.js"></script>
+</head>
+<body>
+    <canvas id="live2dCanvas" width="300" height="400" style="border:1px solid #ccc;"></canvas>
+    <script>
+        const canvas = document.getElementById('live2dCanvas');
+        const gl = canvas.getContext('webgl', { alpha: true });
+
+        // 初始化框架
+        const frame = new Live2DCubismFramework();
+        frame.initialize();
+
+        // 加载模型
+        fetch('/static/live2d/haru/runtime/haru_greeter_t05.model3.json')
+            .then(response => response.json())
+            .then(setting => {
+                const model = new Live2DCubismFramework.Model();
+                model.loadModel(setting);
+                model.setupGL(gl);
+                model.update();
+                console.log('✅ 官方 SDK 加载成功！模型已渲染');
+            })
+            .catch(err => {
+                console.error('❌ 加载失败:', err);
+            });
+    </script>
+</body>
+</html>

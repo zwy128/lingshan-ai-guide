@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Step 1：移动画布</title>
+    <script src="/static/live2d-widget/L2Dwidget.min.js"></script>
+    <style>
+        /* 左侧容器 */
+        #avatar-box {
+            position: fixed;
+            left: 50px;
+            top: 100px;
+            width: 300px;
+            height: 400px;
+            border: 2px dashed #FFD700;
+            overflow: hidden;
+        }
+        #chat-row {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        #chat-row input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        #chat-row button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="avatar-box"></div>
+    <div id="chat-row">
+        <input type="text" id="userInput" placeholder="输入问题..." onkeypress="if(event.key=='Enter')sendText()">
+        <button onclick="sendText()">发送</button>
+    </div>
+
+    <script>
+        // 初始化 Shizuku
+        L2Dwidget.init({
+            model: {
+                jsonPath: '/static/live2d-widget/node_modules/live2d-widget-model-shizuku/assets/shizuku.model.json',
+                scale: 1
+            },
+            display: {
+                position: 'right',    // 先让它按默认位置加载
+                width: 300,
+                height: 400
+            },
+            mobile: { show: false }
+        });
+
+        // 等待画布生成后，把它移动到左侧容器中
+        let attempts = 0;
+        const timer = setInterval(() => {
+            const canvas = document.getElementById('live2d-widget-canvas');
+            if (canvas) {
+                clearInterval(timer);
+                // 把 canvas 从 body 中移除，放入 avatar-box
+                const box = document.getElementById('avatar-box');
+                box.appendChild(canvas);
+                // 清除 live2d-widget 的绝对定位，让 canvas 适应容器
+                canvas.style.position = 'relative';
+                canvas.style.left = '0px';
+                canvas.style.top = '0px';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.margin = '0';
+                console.log('✅ 画布已移动到左侧容器');
+            }
+            attempts++;
+            if (attempts > 50) clearInterval(timer);
+        }, 200);
+
+        // 简单的文字发送（TTS）
+        let currentAudio = null;
+        async function sendText() {
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            try {
+                const res = await fetch('/api/chat/tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                if (data.audio_url) {
+                    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+                    const a = new Audio(data.audio_url);
+                    currentAudio = a;
+                    a.play();
+                }
+            } catch (e) {
+                alert('发送失败');
+            }
+        }
+    </script>
+</body>
+</html>

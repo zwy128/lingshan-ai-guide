@@ -1,0 +1,170 @@
+import os, sys, uuid, subprocess, re, time
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response, HTMLResponse
+from pydantic import BaseModel
+
+from core.rag_engine import RAGEngine
+from core.asr_tts import ASRService, TTSService
+from core.logger import InteractionLogger
+
+app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+rag = RAGEngine()
+asr = ASRService()
+tts = TTSService()
+logger = InteractionLogger()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def remove_emoji(text):
+    emoji_pattern = re.compile(
+        "[\\U0001F600-\\U0001F64F]"
+        "[\\U0001F300-\\U0001F5FF]"
+        "[\\U0001F680-\\U0001F6FF]"
+        "[\\U0001F1E0-\\U0001F1FF]"
+        "[\\U00002702-\\U000027B0]"
+        "[\\U000024C2-\\U0001F251]"
+        "[\\U0001F900-\\U0001F9FF]"
+        "[\\U0001FA00-\\U0001FA6F]"
+        "[\\U0001FA70-\\U0001FAFF]"
+        "[\\U00002600-\\U000026FF]"
+        "[\\U0000FE00-\\U0000FE0F]"
+        "+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', text)
+
+# 预设回答（无需调用大模型）
+PRESET_REPLIES = {
+    '你是谁': '我是小灵，灵山胜境的AI数字导游。我可以为您讲解灵山大佛、梵宫等景点，推荐游览路线，解答各类景区问题。随时问我吧！',
+    '介绍自己': '我叫小灵，是灵山胜境景区的专属AI导游。我熟悉这里的每一个景点和每一段故事，希望能带您领略千年佛国的魅力。',
+    '你好': '您好！我是小灵，灵山胜境的AI导游。有什么可以帮您的吗？',
+    '嗨': '嗨！我是小灵，很高兴为您服务。关于灵山胜境的任何问题，尽管问我哦。',
+}
+
+def get_preset_reply(text):
+    for key, reply in PRESET_REPLIES.items():
+        if key in text:
+            return reply
+    return None
+
+class FeedbackRequest(BaseModel):
+    rating: str
+
+class ChatRequest(BaseModel):
+    text: str
+
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    with open(os.path.join(BASE_DIR, 'static', 'index.html'), 'r', encoding='utf-8') as f:
+        return f.read()
+
+@app.post("/api/chat/tts")
+async def text_to_speech(req: ChatRequest):
+    start = time.time()
+    preset = get_preset_reply(req.text)
+    if preset:
+        reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
+        tts.synthesize(preset, reply_audio)
+        return {"question": req.text, "answer": preset, "audio_url": f"/api/audio/{os.path.basename(reply_audio)}"}
+    result = rag.answer(req.text)
+    clean_answer = remove_emoji(result['answer'])
+    reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
+    tts.synthesize(clean_answer, reply_audio)
+    duration = time.time() - start
+    logger.add(req.text, clean_answer, duration=duration, source="tts")
+    return {
+        "question": result['question'],
+        "answer": clean_answer,
+        "audio_url": f"/api/audio/{os.path.basename(reply_audio)}"
+    }
+
+@app.post("/api/chat/text")
+async def text_chat(req: ChatRequest):
+    start = time.time()
+    preset = get_preset_reply(req.text)
+    if preset:
+        return {"question": req.text, "answer": preset, "sources": []}
+    result = rag.answer(req.text)
+    clean_answer = remove_emoji(result['answer'])
+    duration = time.time() - start
+    logger.add(req.text, clean_answer, duration=duration, source="text")
+    return {
+        "question": result['question'],
+        "answer": clean_answer,
+        "sources": result['sources']
+    }
+
+@app.post("/api/chat/voice")
+async def voice_chat(file: UploadFile = File(...)):
+    start = time.time()
+    raw = f"../data/processed/{uuid.uuid4().hex[:8]}.webm"
+    wav = raw.replace('.webm', '.wav')
+    with open(raw, "wb") as f: f.write(await file.read())
+    subprocess.run(['ffmpeg', '-y', '-i', raw, '-ar', '16000', '-ac', '1', wav], capture_output=True)
+    user_text = asr.transcribe(wav) or "未识别"
+    preset = get_preset_reply(user_text)
+    if preset:
+        reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
+        tts.synthesize(preset, reply_audio)
+        return {"user_text": user_text, "reply_text": preset, "audio_url": f"/api/audio/{os.path.basename(reply_audio)}"}
+    result = rag.answer(user_text)
+    clean_answer = remove_emoji(result['answer'])
+    reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
+    tts.synthesize(clean_answer, reply_audio)
+    duration = time.time() - start
+    logger.add(user_text, clean_answer, duration=duration, source="voice")
+    return {
+        "user_text": user_text,
+        "reply_text": clean_answer,
+        "audio_url": f"/api/audio/{os.path.basename(reply_audio)}"
+    }
+
+@app.get("/api/audio/{filename}")
+async def get_audio(filename: str):
+    path = f"../data/processed/{filename}"
+    if not os.path.exists(path): return Response(status_code=404)
+    with open(path, 'rb') as f: content = f.read()
+    return Response(content=content, media_type="audio/wav")
+
+@app.post("/api/chat/clear")
+async def clear():
+    return rag.clear_history()
+
+@app.get("/api/admin/dashboard")
+async def dashboard():
+    return logger.get_stats()
+
+@app.get("/api/admin/recent")
+async def recent(limit: int = 20):
+    return logger.get_recent(limit)
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin():
+    with open(os.path.join(BASE_DIR, 'static', 'admin.html'), 'r', encoding='utf-8') as f:
+        return f.read()
+
+
+from pydantic import BaseModel
+
+class FeedbackRequest(BaseModel):
+    rating: str  # good, neutral, bad
+
+@app.post("/api/feedback")
+async def feedback(req: FeedbackRequest):
+    if req.rating not in ("good", "neutral", "bad"):
+        return {"status": "error", "message": "无效的评分"}
+    logger.add_feedback(req.rating)
+    return {"status": "ok"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "uptime": time.time()}
+
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 http://localhost:8000 | 管理: http://localhost:8000/admin")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
