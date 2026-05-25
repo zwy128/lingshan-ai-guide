@@ -233,6 +233,11 @@ async def settings():
     with open(os.path.join(BASE_DIR, 'static', 'settings.html'), 'r', encoding='utf-8') as f:
         return f.read()
 
+@app.get("/avatar-manage.html", response_class=HTMLResponse)
+async def avatar_manage():
+    with open(os.path.join(BASE_DIR, 'static', 'avatar-manage.html'), 'r', encoding='utf-8') as f:
+        return f.read()
+
 
 from pydantic import BaseModel
 

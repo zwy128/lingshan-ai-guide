@@ -1,0 +1,102 @@
+{
+  "models": [
+    {
+      "id": "haru",
+      "name": "小春·春日问候",
+      "description": "活泼开朗的春日少女",
+      "tags": [
+        "少女",
+        "活泼"
+      ],
+      "modelUrl": "/static/live2d/haru/runtime/haru_greeter_t05.model3.json",
+      "thumbnail": "🌸",
+      "type": "live2d",
+      "voice": "zh-CN-XiaoxiaoNeural",
+      "voiceName": "晓晓"
+    },
+    {
+      "id": "shizuku",
+      "name": "雫·优雅女士",
+      "description": "成熟优雅的女性形象",
+      "tags": [
+        "成熟",
+        "优雅"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-shizuku/assets/shizuku.model.json",
+      "thumbnail": "💎",
+      "type": "live2d",
+      "voice": "zh-CN-XiaoyiNeural",
+      "voiceName": "晓依"
+    },
+    {
+      "id": "hijiki",
+      "name": "小黑·神秘猫咪",
+      "description": "可爱灵动的猫咪形象",
+      "tags": [
+        "猫咪",
+        "可爱"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-hijiki/assets/hijiki.model.json",
+      "thumbnail": "🐱",
+      "type": "live2d",
+      "voice": "zh-CN-YunxiNeural",
+      "voiceName": "云希"
+    },
+    {
+      "id": "tororo",
+      "name": "多罗罗·憨厚仓鼠",
+      "description": "圆滚滚的仓鼠",
+      "tags": [
+        "仓鼠",
+        "治愈"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-tororo/assets/tororo.model.json",
+      "thumbnail": "🐹",
+      "type": "live2d",
+      "voice": "zh-CN-YunjianNeural",
+      "voiceName": "云健"
+    },
+    {
+      "id": "koharu",
+      "name": "小春·温柔少女",
+      "description": "温柔可爱的少女形象",
+      "tags": [
+        "少女",
+        "温柔"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-koharu/assets/koharu.model.json",
+      "thumbnail": "🌷",
+      "type": "live2d",
+      "voice": "zh-CN-XiaomoNeural",
+      "voiceName": "晓墨"
+    },
+    {
+      "id": "haruto",
+      "name": "阳斗·阳光少年",
+      "description": "阳光帅气的少年",
+      "tags": [
+        "少年",
+        "阳光"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-haruto/assets/haruto.model.json",
+      "thumbnail": "🌊",
+      "type": "live2d",
+      "voice": "zh-CN-YunyangNeural",
+      "voiceName": "云扬"
+    },
+    {
+      "id": "miku",
+      "name": "未来·歌姬初音",
+      "description": "经典虚拟歌姬",
+      "tags": [
+        "歌姬",
+        "偶像"
+      ],
+      "modelUrl": "/static/live2d/node_modules/live2d-widget-model-miku/assets/miku.model.json",
+      "thumbnail": "🎤",
+      "type": "live2d",
+      "voice": "zh-CN-XiaoxuanNeural",
+      "voiceName": "晓萱"
+    }
+  ]
+}
