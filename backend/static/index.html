@@ -52,6 +52,15 @@ body{font-family:"Microsoft YaHei",sans-serif;background:linear-gradient(180deg,
 .option-card img{width:80px;height:80px;border-radius:50%;object-fit:cover;margin-bottom:10px}
 .option-card .label{font-size:14px;font-weight:bold}
 
+
+/* 思考中加载动画 */
+.typing-indicator{display:flex;align-items:center;gap:5px;padding:10px 14px;background:white;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);max-width:80%;align-self:flex-start;animation:in .3s}
+.typing-indicator .dot{width:8px;height:8px;border-radius:50%;background:#667eea;animation:typingBounce 1.4s infinite ease-in-out}
+.typing-indicator .dot:nth-child(1){animation-delay:0s}
+.typing-indicator .dot:nth-child(2){animation-delay:.2s}
+.typing-indicator .dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-8px);opacity:1}}
+.thinking-text{font-size:13px;color:#999;margin-left:4px}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js"></script>
@@ -208,27 +217,30 @@ function wave(){let p=0;const t=setInterval(()=>{if(rightHand){rightHand.style.t
 function speakAnim(){startSpeak();tilt(-3);look('l');setTimeout(()=>{tilt(3);look('r')},800);setTimeout(()=>{tilt(-2);look('l')},1600);setTimeout(()=>{resetHead();resetEyes()},2400)}
 function stopAll(){if(currentAudio){currentAudio.pause();currentAudio=null}stopSpeak();resetHead();resetEyes();document.getElementById('voiceText').textContent=''}
 
+// 思考中加载动画
+function showThinking(){var msgs=document.getElementById('messages');var el=document.createElement('div');el.className='typing-indicator';el.id='thinkingBubble';el.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div><span class="thinking-text">思考中...</span>';msgs.appendChild(el);msgs.scrollTop=msgs.scrollHeight;}
+function hideThinking(){var el=document.getElementById('thinkingBubble');if(el)el.remove();}
 function addMsg(t,u){const d=document.createElement('div');d.className='msg '+(u?'user':'bot');d.textContent=t;document.getElementById('messages').appendChild(d);document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight}
 
 // 文字发送
 async function sendText(){
   const i=document.getElementById('userInput'),b=document.querySelector('.btn-send');
   const t=i.value.trim();if(!t)return;
-  addMsg(t,true);i.value='';b.style.opacity='.5';
+  addMsg(t,true);i.value='';b.style.opacity='.5';b.disabled=true;showThinking();
   try{
     const r=await fetch('/api/chat/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
     const d=await r.json();
-    addMsg(d.answer,false);
+    hideThinking();addMsg(d.answer,false);
     showFeedback();
     if(d.audio_url){
       document.getElementById('voiceText').textContent='播放中...';
       stopAll();const a=new Audio(d.audio_url);currentAudio=a;
       a.onplay=()=>{speakAnim();if(ahoge)ahoge.setAttribute('d','M110 22 Q118 -10 135 -14');setTimeout(()=>{if(ahoge)ahoge.setAttribute('d','M110 22 Q115 -8 132 -12')},400)};
-      a.onended=()=>{stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};
+      a.onended=()=>{hideThinking();stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};
       a.play();
     }else{happy()}
-  }catch(e){addMsg('网络波动，请稍后重试',false)}
-  b.style.opacity='1';i.focus();
+  }catch(e){hideThinking();addMsg('网络波动，请稍后重试',false)}
+  b.style.opacity='1';b.disabled=false;i.focus();
 }
 
 async function clearChat(){
@@ -253,12 +265,12 @@ async function startRec(){
         const r=await fetch('/api/chat/voice',{method:'POST',body:f});
         const d=await r.json();
         document.getElementById('voiceText').textContent='你说：'+d.user_text;
-        addMsg(d.reply_text,false);
+        hideThinking();addMsg(d.reply_text,false);
         showFeedback();
         if(d.audio_url){
           stopAll();const a=new Audio(d.audio_url);currentAudio=a;
           a.onplay=()=>{speakAnim();if(ahoge)ahoge.setAttribute('d','M110 22 Q118 -10 135 -14');setTimeout(()=>{if(ahoge)ahoge.setAttribute('d','M110 22 Q115 -8 132 -12')},400)};
-          a.onended=()=>{stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};
+          a.onended=()=>{hideThinking();stopSpeak();resetHead();resetEyes();happy();document.getElementById('voiceText').textContent='';currentAudio=null};
           a.play();
         }else{happy()}
       }catch(e){stopSpeak()}
