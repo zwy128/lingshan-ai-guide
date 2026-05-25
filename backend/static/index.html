@@ -358,7 +358,6 @@ setTimeout(wave,500);
 <script>
 // ====== 模型-声音映射 ======
 var MODEL_VOICE_MAP={
-'haru':{voice:'zh-CN-XiaoxiaoNeural',name:'晓晓'},
 'shizuku':{voice:'zh-CN-XiaoyiNeural',name:'晓依'},
 'hijiki':{voice:'zh-CN-YunxiNeural',name:'云希'},
 'tororo':{voice:'zh-CN-YunjianNeural',name:'云健'},
@@ -416,7 +415,7 @@ container.appendChild(nd);
 var modelId=localStorage.getItem('selectedModelId')||'shizuku';
 var MODEL_PATHS={'shizuku':'/static/models/shizuku/shizuku.model.json','koharu':'/static/models/koharu/koharu.model.json','haruto':'/static/models/haruto/haruto.model.json','hijiki':'/static/models/hijiki/hijiki.model.json','tororo':'/static/models/tororo/tororo.model.json','miku':'/static/models/miku/miku.model.json'};
 var modelUrl=localStorage.getItem('selectedModelUrl')||MODEL_PATHS[modelId]||'/static/models/shizuku/shizuku.model.json';
-if(modelUrl.includes('haru/')||modelUrl.includes('.model3.json')){container.innerHTML='<div style="color:white;padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:15px">🚧</div><div style="font-size:18px;font-weight:bold">Haru 暂不支持</div><div style="font-size:13px;opacity:.7;margin-top:8px">Cubism 3/4 模型需要升级 SDK</div><div style="font-size:12px;opacity:.5;margin-top:5px">请选择其他模型：雫/小春/小黑/多罗罗/晴斗/初音</div></div>';window.isLive2DActive=false;return;}
+
 var model=await PIXI.live2d.Live2DModel.from(modelUrl);
 app.stage.addChild(model);
 model.anchor.set(0.5,0.5);model.x=app.screen.width/2;model.y=app.screen.height/2;
