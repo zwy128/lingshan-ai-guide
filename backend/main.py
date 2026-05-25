@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 
 import re
 
@@ -108,7 +111,7 @@ async def text_to_speech(req: ChatRequest):
     reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
     tts.synthesize(clean_answer, reply_audio)
     duration = time.time() - start
-    logger.add(req.text, clean_answer, duration=duration, source="tts")
+    logger.log(req.text, clean_answer, duration=duration, source="tts")
     return {
         "question": result['question'],
         "answer": clean_answer,
@@ -124,7 +127,7 @@ async def text_chat(req: ChatRequest):
     result = rag.answer(req.text)
     clean_answer = remove_emoji(result['answer'])
     duration = time.time() - start
-    logger.add(req.text, clean_answer, duration=duration, source="text")
+    logger.log(req.text, clean_answer, duration=duration, source="text")
     return {
         "question": result['question'],
         "answer": clean_answer,
@@ -151,7 +154,7 @@ async def voice_chat(file: UploadFile = File(...), voice: str = Form("")):
     reply_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
     tts.synthesize(clean_answer, reply_audio)
     duration = time.time() - start
-    logger.add(user_text, clean_answer, duration=duration, source="voice")
+    logger.log(user_text, clean_answer, duration=duration, source="voice")
     return {
         "user_text": user_text,
         "reply_text": clean_answer,
@@ -209,7 +212,7 @@ async def image_chat(text: str = Form(""), file: UploadFile = File(...)):
     clean_answer = remove_emoji(answer)
     tts_audio = f"../data/processed/reply_{uuid.uuid4().hex[:8]}.wav"
     tts.synthesize(clean_answer, tts_audio)
-    logger.add(text or "图片提问", clean_answer, source="image")
+    logger.log(text or "图片提问", clean_answer, source="image")
     
     return {
         "answer": clean_answer,

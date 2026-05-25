@@ -30,14 +30,16 @@ class InteractionLogger:
         with open(self.log_path, 'w') as f:
             json.dump(logs, f, ensure_ascii=False, indent=2)
 
-    def log(self, user_input: str, ai_response: str, model: str = "", voice: str = ""):
+    def log(self, user_input: str, ai_response: str, model: str = "", voice: str = "", duration: float = 0, source: str = ""):
         logs = self._read()
         logs.append({
             "timestamp": datetime.now().isoformat(),
             "user_input": user_input,
             "ai_response": ai_response,
             "model": model,
-            "voice": voice
+            "voice": voice,
+            "duration": duration,
+            "source": source
         })
         self._write(logs)
 

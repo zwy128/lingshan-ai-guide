@@ -30,3 +30,4 @@ data/
 # 生成文件
 backend/static/audio/
 backend/fix_tts*.sh
+data/chroma_storage/
