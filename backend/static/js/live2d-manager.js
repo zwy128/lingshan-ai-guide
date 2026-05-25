@@ -220,9 +220,6 @@ class Live2DManager {
             // 注入口型同步到模型更新循环
             this._injectMouthSync();
 
-            // 添加名称显示
-            this._addNameDisplay(modelConfig.name || '数字人');
-
             this.currentModelId = modelConfig.id;
             this.isLoaded = true;
 
@@ -328,19 +325,6 @@ class Live2DManager {
         } catch (e) {
             console.log('[Live2DManager] 无内置表情，使用参数驱动');
         }
-    }
-
-    /**
-     * 添加名称显示
-     */
-    _addNameDisplay(name) {
-        const existing = this.container.querySelector('.name-display');
-        if (existing) existing.remove();
-
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'name-display';
-        nameDiv.innerHTML = `<span style="color:#00ff88">●</span> <span id="guideNameText">${name}</span><div class="role">AI 智慧导游</div>`;
-        this.container.appendChild(nameDiv);
     }
 
     /**

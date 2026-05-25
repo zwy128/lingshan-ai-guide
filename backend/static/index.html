@@ -264,8 +264,6 @@ async function loadLive2DModel(modelConfig){
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
   var container=document.getElementById('avatarArea');
-  var nameDisplay=document.getElementById('nameDisplay');
-  var nameText=document.getElementById('guideNameText');
 
   // 修正模型URL：将旧路径映射到正确的 node_modules 路径
   if (modelConfig.url && modelConfig.url.includes('/static/models/')) {
@@ -279,11 +277,11 @@ async function loadLive2DModel(modelConfig){
 
   if(success){
     isLive2DActive=true;
+    // 更新名字显示
+    var nameDisplay=document.getElementById('nameDisplay');
+    var nameText=document.getElementById('guideNameText');
     nameDisplay.style.display='block';
     nameText.textContent=modelConfig.name||'数字人';
-    // 隐藏 manager 内部创建的 name-display（我们自己管理）
-    var internalName=container.querySelector('.name-display');
-    if(internalName)internalName.style.display='none';
   }else{
     isLive2DActive=false;
     restoreSVG();
