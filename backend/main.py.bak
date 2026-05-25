@@ -29,10 +29,8 @@ import os, sys, uuid, subprocess, re, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from fastapi import FastAPI, UploadFile, File, Form
-from api.monitoring import router as monitoring_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import Response, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -40,11 +38,8 @@ from core.rag_engine import RAGEngine
 from core.asr_tts import ASRService, TTSService
 from core.logger import InteractionLogger
 from core.config import get_model_list, get_voice_list, validate_model, validate_voice
-from core.cache import cache_response, cache_manager
 
 app = FastAPI()
-# 添加Gzip压缩中间件
-app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=4)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -406,13 +401,11 @@ async def delete_model(filename: str):
 
 
 # ========== 模型与音色配置接口 ==========
-@cache_response("model_list")
 @app.get("/api/config/models")
 async def list_models():
     """获取可用模型列表"""
     return {"models": get_model_list()}
 
-@cache_response("voice_list")
 @app.get("/api/config/voices")
 async def list_voices():
     """获取可用音色列表"""
@@ -432,7 +425,6 @@ async def set_voice(voice_id: str):
     tts.set_voice(valid_voice)
     return {"status": "ok", "current_voice": valid_voice}
 
-@cache_response("current_config")
 @app.get("/api/config/current")
 async def get_current_config():
     """获取当前配置"""
