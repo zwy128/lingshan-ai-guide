@@ -60,7 +60,11 @@
     "rating": "good"
   },
   {
+<<<<<<< HEAD
     "timestamp": 1779677845.6006577,
+=======
+    "timestamp": 1779684997.8747864,
+>>>>>>> 153c951 (resolve merge conflicts)
     "date": "2026-05-25",
     "rating": "good"
   }
