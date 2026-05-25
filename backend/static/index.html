@@ -413,7 +413,10 @@ container.appendChild(app.view);
 var nd=document.createElement('div');nd.className='name-display';
 nd.innerHTML='<span style="color:#00ff88">●</span> <span id="guideNameText">'+sn+'</span><div class="role">AI 智慧导游</div>';
 container.appendChild(nd);
-var modelUrl=localStorage.getItem('selectedModelUrl')||'/static/models/shizuku/shizuku.model.json';
+var modelId=localStorage.getItem('selectedModelId')||'shizuku';
+var MODEL_PATHS={'shizuku':'/static/models/shizuku/shizuku.model.json','koharu':'/static/models/koharu/koharu.model.json','haruto':'/static/models/haruto/haruto.model.json','hijiki':'/static/models/hijiki/hijiki.model.json','tororo':'/static/models/tororo/tororo.model.json','miku':'/static/models/miku/miku.model.json'};
+var modelUrl=localStorage.getItem('selectedModelUrl')||MODEL_PATHS[modelId]||'/static/models/shizuku/shizuku.model.json';
+if(modelUrl.includes('haru/')||modelUrl.includes('.model3.json')){container.innerHTML='<div style="color:white;padding:40px;text-align:center"><div style="font-size:48px;margin-bottom:15px">🚧</div><div style="font-size:18px;font-weight:bold">Haru 暂不支持</div><div style="font-size:13px;opacity:.7;margin-top:8px">Cubism 3/4 模型需要升级 SDK</div><div style="font-size:12px;opacity:.5;margin-top:5px">请选择其他模型：雫/小春/小黑/多罗罗/晴斗/初音</div></div>';window.isLive2DActive=false;return;}
 var model=await PIXI.live2d.Live2DModel.from(modelUrl);
 app.stage.addChild(model);
 model.anchor.set(0.5,0.5);model.x=app.screen.width/2;model.y=app.screen.height/2;
